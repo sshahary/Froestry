@@ -1,0 +1,88 @@
+# Environment files
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Node / frontend
+node_modules/
+web/node_modules/
+web/dist/
+web/build/
+web/.vite/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+coverage/
+tests/__snapshots__/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Logs
+logs/
+*.log
+
+# Data - ignore large/raw/generated data
+data/raw/
+data/outputs/
+data/processed/
+data/*.zip
+data/*.tar.gz
+*.sqlite
+*.db
+*.gpkg
+*.shp
+*.shx
+*.dbf
+*.tif
+*.tiff
+*.mbtiles
+*.h5
+*.nc
+*.pptx
+*.xlsx
+
+# Secrets and keys
+secrets.json
+*.pem
+*.key
+
+# Misc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.local
+*.tsbuildinfo
+*.iml
+*.swp
+*.bak
+*.tmp
+*.orig
+*.rej
+
+# Docker
+docker-compose.override.yml
