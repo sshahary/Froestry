@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Popup</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map { height: 100vh; width: 100%; }
+        .debug { position: fixed; top: 10px; right: 10px; background: white; 
+                 padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.3);
+                 max-width: 400px; max-height: 80vh; overflow: auto; z-index: 1000; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="debug" id="debug">
+        <h3>🔍 Debug Info</h3>
+        <p>Loading...</p>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([49.142, 9.221], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        const debugDiv = document.getElementById('debug');
+
+        // Try multiple paths
+        const paths = [
+            'data/all_locations.geojson',
+            '../data/processed/top_100_enhanced.geojson',
+            '../data/processed/top_100_locations.geojson',
+            '../data/processed/scored_locations_all.geojson'
+        ];
+
+        async function tryLoadData() {
+            for (let path of paths) {
+                try {
+                    debugDiv.innerHTML += `<p>Trying: ${path}</p>`;
+                    const response = await fetch(path);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        debugDiv.innerHTML += `<p style="color: green;">✅ SUCCESS: ${path}</p>`;
+                        debugDiv.innerHTML += `<p>Features: ${data.features.length}</p>`;
+                        
+                        // Show first feature data
+                        const firstFeature = data.features[0];
+                        debugDiv.innerHTML += `<hr><h4>First Feature Properties:</h4>`;
+                        debugDiv.innerHTML += `<pre style="font-size: 11px; background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto;">${JSON.stringify(firstFeature.properties, null, 2)}</pre>`;
+                        
+                        // Create markers
+                        data.features.slice(0, 20).forEach(f => {
+                            const p = f.properties;
+                            const coords = f.geometry.coordinates;
+                            
+                            // Handle coordinate order
+                            let lat = coords[1] > coords[0] ? coords[1] : coords[0];
+                            let lon = coords[1] > coords[0] ? coords[0] : coords[1];
+                            
+                            const color = p.final_score >= 90 ? 'darkgreen' : 
+                                         p.final_score >= 80 ? 'green' : 
+                                         p.final_score >= 70 ? 'lightgreen' : 'yellow';
+                            
+                            L.circleMarker([lat, lon], {
+                                radius: 8,
+                                fillColor: color,
+                                color: 'white',
+                                weight: 2,
+                                fillOpacity: 0.8
+                            }).bindPopup(`
+                                <div style="min-width: 280px;">
+                                    <h3 style="color: ${color};">🏆 Rank #${p.rank || 'N/A'}</h3>
+                                    <p><strong>Score:</strong> ${(p.final_score || 0).toFixed(1)}/100</p>
+                                    
+                                    <hr>
+                                    
+                                    <p><strong>📍 Location:</strong><br>
+                                       ${p.location_type || p.locationType || 'Green Space'}</p>
+                                    
+                                    <p><strong>📮 Postal:</strong><br>
+                                       ${p.postal_code || p.postalCode || 'Unknown'} - 
+                                       ${p.area_name || p.areaName || 'Heilbronn'}</p>
+                                    
+                                    <hr>
+                                    
+                                    <p><strong>🔥 Heat:</strong> ${(p.heat_score || 0).toFixed(1)}/100</p>
+                                    <p><strong>📏 Spatial:</strong> ${(p.spatial_score || 0).toFixed(1)}/100</p>
+                                    <p><strong>👥 Social:</strong> ${(p.social_score || 0).toFixed(1)}/100</p>
+                                    <p><strong>🚜 Maintenance:</strong> ${(p.maintenance_score || 0).toFixed(1)}/100</p>
+                                    
+                                    <hr>
+                                    
+                                    <p><strong>🌳 Species:</strong><br>
+                                       ${p.recommended_species || p.recommendedSpecies || 'Oak or Linden'}</p>
+                                    
+                                    ${p.schools_nearby || p.schoolsNearby ? `
+                                        <p><strong>🏫 Schools:</strong> ${p.schools_nearby || p.schoolsNearby}</p>
+                                    ` : ''}
+                                    
+                                    ${p.residents_nearby || p.residentsNearby ? `
+                                        <p><strong>👥 Residents:</strong> ${p.residents_nearby || p.residentsNearby}</p>
+                                    ` : ''}
+                                    
+                                    ${p.cooling_estimate || p.coolingEstimate ? `
+                                        <p><strong>❄️ Cooling:</strong> ${p.cooling_estimate || p.coolingEstimate}</p>
+                                    ` : ''}
+                                    
+                                    <hr>
+                                    
+                                    <p style="font-size: 12px;">
+                                        <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}
+                                    </p>
+                                    
+                                    <a href="https://www.google.com/maps?q=${lat},${lon}" 
+                                       target="_blank"
+                                       style="display: block; margin-top: 10px; padding: 10px;
+                                              background: green; color: white; text-align: center;
+                                              text-decoration: none; border-radius: 5px;">
+                                        🗺️ Google Maps
+                                    </a>
+                                </div>
+                            `).addTo(map);
+                        });
+                        
+                        return; // Success, stop trying
+                    }
+                } catch (error) {
+                    debugDiv.innerHTML += `<p style="color: red;">❌ Error: ${path}</p>`;
+                }
+            }
+            
+            debugDiv.innerHTML += `<p style="color: red; font-weight: bold;">All paths failed!</p>`;
+        }
+
+        tryLoadData();
+    </script>
+</body>
+</html>

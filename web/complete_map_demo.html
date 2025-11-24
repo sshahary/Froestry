@@ -1,0 +1,632 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heilbronn Tree Planting - Complete Map</title>
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #1a1a1a;
+        color: white;
+      }
+
+      #map {
+        height: 100vh;
+        width: 100vw;
+      }
+
+      .legend {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        max-width: 350px;
+        color: #333;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .legend h2 {
+        margin: 0 0 15px 0;
+        color: #2d5016;
+        font-size: 1.5em;
+      }
+
+      .legend-section {
+        margin-bottom: 15px;
+      }
+
+      .legend-section h3 {
+        margin: 0 0 8px 0;
+        font-size: 1.1em;
+        color: #333;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+        font-size: 0.9em;
+      }
+
+      .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-right: 8px;
+        border: 2px solid white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+
+      .stats {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 15px;
+        color: white;
+        font-size: 0.9em;
+      }
+
+      .stats h3 {
+        margin: 0 0 10px 0;
+        color: #ccff00;
+      }
+
+      .loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2000;
+        text-align: center;
+        color: white;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #333;
+        border-top: 4px solid #ccff00;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+      }
+
+      .control-btn {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        margin-left: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .control-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <!-- Loading indicator -->
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading Heilbronn Tree Planting Data...</p>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <h2>🌳 Heilbronn Tree Planting System</h2>
+
+      <div class="legend-section">
+        <h3>🔥 Heat Priority (NDVI)</h3>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #dc2626"></div>
+          <span>Extreme Heat (95-100) - URGENT!</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #ea580c"></div>
+          <span>High Heat (70-95)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #eab308"></div>
+          <span>Medium Heat (40-70)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #16a34a"></div>
+          <span>Cool Areas (0-40)</span>
+        </div>
+      </div>
+
+      <div class="legend-section">
+        <h3>🚫 Exclusions</h3>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #cc0000"></div>
+          <span>🏢 Buildings (3m buffer)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #666666"></div>
+          <span>🛣️ Roads (2.5m buffer)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #8b4513"></div>
+          <span>🌳 Existing Trees</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #ff8800"></div>
+          <span>🚒 Fire Access (5m buffer)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #0066cc"></div>
+          <span>🌊 Water Bodies</span>
+        </div>
+      </div>
+
+      <div class="legend-section">
+        <h3>✅ Plantable Areas</h3>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #228b22"></div>
+          <span>🌿 Green Spaces</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #00ff00"></div>
+          <span>✅ Plantable Area</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #ccff00"></div>
+          <span>✅ Fresh Verified (2020+)</span>
+        </div>
+      </div>
+
+      <div class="legend-section">
+        <h3>📍 Top Locations</h3>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #dc143c"></div>
+          <span>🎯 Top 100 Locations</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #ff6b35"></div>
+          <span>⭐ Enhanced Analysis</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <h3>🎮 REAL DATA LOADED</h3>
+      <div>✅ <span id="total-locations">114,982</span> locations analyzed</div>
+      <div>✅ <span id="fresh-locations">13,882</span> fresh verified</div>
+      <div>
+        📊 CO₂: <span id="co2-reduction">305 tonnes</span>/year potential
+      </div>
+      <div>🗺️ Area: <span id="plantable-area">11.50 km²</span> plantable</div>
+      <div>🌱 Fresh: <span id="fresh-area">1.39 km²</span> verified fresh</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="control-btn" onclick="toggleAllLayers()">
+        Toggle All
+      </button>
+      <button class="control-btn" onclick="focusOnHeilbronn()">
+        Center Map
+      </button>
+      <button class="control-btn" onclick="showLayerInfo()">Layer Info</button>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+      // Initialize map
+      const map = L.map("map", {
+        center: [49.1427, 9.2109], // Heilbronn coordinates
+        zoom: 13,
+        maxBounds: [
+          [49.12, 9.18],
+          [49.17, 9.25],
+        ],
+        maxBoundsViscosity: 1.0,
+      });
+
+      // Add base layer - Google Satellite
+      L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
+        attribution: "&copy; Google",
+        maxZoom: 20,
+      }).addTo(map);
+
+      // Add labels overlay
+      L.tileLayer("https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}", {
+        attribution: "&copy; Google",
+        maxZoom: 20,
+      }).addTo(map);
+
+      // Layer groups for organization
+      const layerGroups = {
+        exclusions: L.layerGroup(),
+        plantable: L.layerGroup(),
+        locations: L.layerGroup(),
+        heatMap: L.layerGroup(),
+      };
+
+      // Add all layer groups to map
+      Object.values(layerGroups).forEach((group) => group.addTo(map));
+
+      // Heat map overlay (using the comparison image as placeholder)
+      const heatMapBounds = [
+        [49.12, 9.18],
+        [49.17, 9.25],
+      ];
+      const heatMapOverlay = L.imageOverlay(
+        "/data/heat_map_comparison.png",
+        heatMapBounds,
+        {
+          opacity: 0.6,
+          attribution: "Heat Priority Map (NDVI Analysis)",
+        }
+      );
+      layerGroups.heatMap.addLayer(heatMapOverlay);
+
+      // Style functions
+      const getLayerStyle = (layerType) => {
+        const styles = {
+          buildings: {
+            color: "#cc0000",
+            fillColor: "#cc0000",
+            fillOpacity: 0.3,
+            weight: 1,
+          },
+          roads: {
+            color: "#666666",
+            fillColor: "#666666",
+            fillOpacity: 0.3,
+            weight: 2,
+          },
+          trees: {
+            color: "#8B4513",
+            fillColor: "#8B4513",
+            fillOpacity: 0.4,
+            weight: 1,
+          },
+          fire: {
+            color: "#ff8800",
+            fillColor: "#ff8800",
+            fillOpacity: 0.3,
+            weight: 2,
+          },
+          water: {
+            color: "#0066cc",
+            fillColor: "#0066cc",
+            fillOpacity: 0.5,
+            weight: 1,
+          },
+          plantable: {
+            color: "#00ff00",
+            fillColor: "#00ff00",
+            fillOpacity: 0.4,
+            weight: 2,
+          },
+          plantableFresh: {
+            color: "#CCFF00",
+            fillColor: "#CCFF00",
+            fillOpacity: 0.6,
+            weight: 2,
+          },
+          greenSpaces: {
+            color: "#228B22",
+            fillColor: "#228B22",
+            fillOpacity: 0.4,
+            weight: 1,
+          },
+        };
+        return styles[layerType] || styles.plantable;
+      };
+
+      // Create custom marker for locations
+      const createLocationMarker = (score) => {
+        const color =
+          score === 100 ? "#CCFF00" : score >= 95 ? "#FF6B35" : "#FFD23F";
+        return L.divIcon({
+          className: "custom-marker",
+          html: `<div style="
+                    width: 20px; height: 20px;
+                    background-color: ${color};
+                    border: 3px solid white;
+                    border-radius: 50%;
+                    box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+                    display: flex; align-items: center; justify-content: center;
+                    font-weight: bold; font-size: 10px;
+                    color: ${color === "#CCFF00" ? "#000" : "#fff"};
+                ">${Math.round(score)}</div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+        });
+      };
+
+      // Load GeoJSON data
+      const loadGeoJSONLayer = async (
+        filename,
+        layerGroup,
+        style,
+        isLocationLayer = false
+      ) => {
+        try {
+          const response = await fetch(`/data/${filename}`);
+          if (!response.ok) throw new Error(`Failed to load ${filename}`);
+
+          const data = await response.json();
+          console.log(
+            `Loaded ${filename}: ${data.features?.length || 0} features`
+          );
+
+          if (isLocationLayer) {
+            // Handle point locations as markers
+            data.features.forEach((feature, index) => {
+              if (feature.geometry.type === "Point") {
+                const [lng, lat] = feature.geometry.coordinates;
+                const score = feature.properties.final_score || 100;
+
+                const marker = L.marker([lat, lng], {
+                  icon: createLocationMarker(score),
+                });
+
+                marker.bindPopup(`
+                                <div style="color: #333; padding: 10px;">
+                                    <h3 style="margin: 0 0 10px 0;">🌳 Tree Location #${
+                                      index + 1
+                                    }</h3>
+                                    <p><strong>Score:</strong> ${score}/100</p>
+                                    <p><strong>Heat Priority:</strong> ${
+                                      feature.properties.heat_score || 100
+                                    }/100</p>
+                                    ${
+                                      feature.properties.recommended_species
+                                        ? `<p><strong>Species:</strong> ${feature.properties.recommended_species}</p>`
+                                        : ""
+                                    }
+                                    <p style="font-size: 0.8em; color: #666;">
+                                        Lat: ${lat.toFixed(
+                                          6
+                                        )}, Lng: ${lng.toFixed(6)}
+                                    </p>
+                                </div>
+                            `);
+
+                layerGroup.addLayer(marker);
+              }
+            });
+          } else {
+            // Handle polygon/line layers
+            const geoJsonLayer = L.geoJSON(data, {
+              style: style,
+              onEachFeature: (feature, layer) => {
+                if (feature.properties) {
+                  const props = feature.properties;
+                  layer.bindPopup(`
+                                    <div style="color: #333; padding: 10px;">
+                                        <h3 style="margin: 0 0 10px 0;">${filename
+                                          .replace(".geojson", "")
+                                          .replace(/_/g, " ")}</h3>
+                                        ${Object.entries(props)
+                                          .slice(0, 5)
+                                          .map(
+                                            ([key, value]) =>
+                                              `<p><strong>${key}:</strong> ${value}</p>`
+                                          )
+                                          .join("")}
+                                    </div>
+                                `);
+                }
+              },
+            });
+            layerGroup.addLayer(geoJsonLayer);
+          }
+
+          return data.features?.length || 0;
+        } catch (error) {
+          console.error(`Error loading ${filename}:`, error);
+          return 0;
+        }
+      };
+
+      // Load all layers
+      const loadAllLayers = async () => {
+        console.log("🔄 Loading all GeoJSON layers...");
+
+        const layerPromises = [
+          // Exclusion layers
+          loadGeoJSONLayer(
+            "exclusion_buildings.geojson",
+            layerGroups.exclusions,
+            getLayerStyle("buildings")
+          ),
+          loadGeoJSONLayer(
+            "exclusion_roads.geojson",
+            layerGroups.exclusions,
+            getLayerStyle("roads")
+          ),
+          loadGeoJSONLayer(
+            "exclusion_trees.geojson",
+            layerGroups.exclusions,
+            getLayerStyle("trees")
+          ),
+          loadGeoJSONLayer(
+            "exclusion_fire.geojson",
+            layerGroups.exclusions,
+            getLayerStyle("fire")
+          ),
+          loadGeoJSONLayer(
+            "water_bodies.geojson",
+            layerGroups.exclusions,
+            getLayerStyle("water")
+          ),
+
+          // Plantable areas
+          loadGeoJSONLayer(
+            "green_spaces.geojson",
+            layerGroups.plantable,
+            getLayerStyle("greenSpaces")
+          ),
+          loadGeoJSONLayer(
+            "plantable_area.geojson",
+            layerGroups.plantable,
+            getLayerStyle("plantable")
+          ),
+          loadGeoJSONLayer(
+            "plantable_area_fresh.geojson",
+            layerGroups.plantable,
+            getLayerStyle("plantableFresh")
+          ),
+
+          // Location points
+          loadGeoJSONLayer(
+            "top_100_locations.geojson",
+            layerGroups.locations,
+            null,
+            true
+          ),
+          loadGeoJSONLayer(
+            "top_100_enhanced.geojson",
+            layerGroups.locations,
+            null,
+            true
+          ),
+          loadGeoJSONLayer(
+            "top_100_with_coordinates.geojson",
+            layerGroups.locations,
+            null,
+            true
+          ),
+        ];
+
+        try {
+          const results = await Promise.all(layerPromises);
+          const totalFeatures = results.reduce((sum, count) => sum + count, 0);
+
+          console.log(
+            `✅ Loaded ${totalFeatures} total features across all layers`
+          );
+
+          // Hide loading indicator
+          document.getElementById("loading").style.display = "none";
+
+          // Update stats if needed
+          updateStats(totalFeatures);
+        } catch (error) {
+          console.error("❌ Error loading layers:", error);
+          document.getElementById("loading").innerHTML = `
+                    <div style="color: #ff4444;">
+                        <h3>❌ Error Loading Data</h3>
+                        <p>Please check that the data files are available in /data/</p>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+        }
+      };
+
+      // Utility functions
+      const toggleAllLayers = () => {
+        Object.values(layerGroups).forEach((group) => {
+          if (map.hasLayer(group)) {
+            map.removeLayer(group);
+          } else {
+            map.addLayer(group);
+          }
+        });
+      };
+
+      const focusOnHeilbronn = () => {
+        map.setView([49.1427, 9.2109], 13);
+      };
+
+      const showLayerInfo = () => {
+        let info = "Layer Information:\\n\\n";
+        Object.entries(layerGroups).forEach(([name, group]) => {
+          const layerCount = Object.keys(group._layers).length;
+          info += `${name}: ${layerCount} layers\\n`;
+        });
+        alert(info);
+      };
+
+      const updateStats = (totalFeatures) => {
+        // Update any dynamic stats here if needed
+        console.log(`Map loaded with ${totalFeatures} features`);
+      };
+
+      // Add layer control
+      const overlayMaps = {
+        "🔥 Heat Map": layerGroups.heatMap,
+        "🚫 Exclusions": layerGroups.exclusions,
+        "🌿 Plantable Areas": layerGroups.plantable,
+        "📍 Tree Locations": layerGroups.locations,
+      };
+
+      L.control
+        .layers(null, overlayMaps, {
+          position: "topright",
+          collapsed: false,
+        })
+        .addTo(map);
+
+      // Start loading data
+      loadAllLayers();
+
+      // Add a test marker to confirm map is working
+      L.marker([49.1427, 9.2109])
+        .addTo(map)
+        .bindPopup(
+          `
+                <div style="color: #333; padding: 10px; text-align: center;">
+                    <h3 style="margin: 0 0 10px 0;">🌳 Heilbronn Center</h3>
+                    <p>Tree Planting Analysis System</p>
+                    <p style="font-size: 0.8em; color: #666;">
+                        This map shows all available GeoJSON layers<br>
+                        for the Heilbronn tree planting project.
+                    </p>
+                </div>
+            `
+        )
+        .openPopup();
+
+      console.log("🗺️ Heilbronn Tree Planting Map initialized");
+    </script>
+  </body>
+</html>

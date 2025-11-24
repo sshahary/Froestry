@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌳 Tree Planting AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .message.user .message-content {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .message-label {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            opacity: 0.7;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 2px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #2e7d32;
+        }
+
+        .send-button {
+            padding: 15px 30px;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .send-button:hover {
+            background: #1b5e20;
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px;
+            background: white;
+            border-radius: 18px;
+            width: fit-content;
+            border: 2px solid #e0e0e0;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2e7d32;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .quick-question {
+            padding: 10px 15px;
+            background: white;
+            border: 2px solid #2e7d32;
+            color: #2e7d32;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-question:hover {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .stats-box {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .stats-box strong {
+            color: #1b5e20;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🌳 Heilbronn Tree Planting AI Assistant</h1>
+            <p>Ask me anything about tree planting locations!</p>
+        </div>
+
+        <div class="quick-questions" id="quickQuestions">
+            <div class="quick-question" onclick="askQuestion('Where should I plant trees in postal code 74072?')">
+                📮 Show me trees in 74072
+            </div>
+            <div class="quick-question" onclick="askQuestion('Why is location #1 the best?')">
+                🏆 Why is #1 the best?
+            </div>
+            <div class="quick-question" onclick="askQuestion('What is the environmental impact?')">
+                🌍 Environmental impact
+            </div>
+            <div class="quick-question" onclick="askQuestion('Show me the hottest areas')">
+                🔥 Show hottest areas
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div>
+                    <div class="message-label">🤖 AI Assistant</div>
+                    <div class="message-content">
+                        Hello! I'm your AI assistant for the Heilbronn Tree Planting System. 
+                        I have analyzed <strong>115,019 potential tree locations</strong> across 
+                        <strong>11.50 km²</strong> of plantable area.<br><br>
+                        Ask me anything about:
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li>🗺️ Specific locations or postal codes</li>
+                            <li>🔥 Heat priority areas</li>
+                            <li>🌳 Tree recommendations</li>
+                            <li>📊 Environmental impact</li>
+                            <li>📍 Navigation to locations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <input 
+                type="text" 
+                class="chat-input" 
+                id="userInput" 
+                placeholder="Ask me anything about tree planting..."
+                onkeypress="handleKeyPress(event)"
+            />
+            <button class="send-button" id="sendButton" onclick="sendMessage()">
+                Send 🚀
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Load the tree data (you'll need to provide this)
+        let treeData = {
+            top_locations: [], // Will be loaded from your data
+            stats: {
+                total_candidates: 115019,
+                plantable_area: 11.50,
+                top_score: 100.0,
+                avg_score_top_100: 95.8,
+                co2_reduction: 2530.4,
+                postal_codes: {
+                    '74072': { name: 'Innenstadt', count: 2, avg_score: 96.0 },
+                    '74074': { name: 'Böckingen', count: 29, avg_score: 95.6 },
+                    '74076': { name: 'Sontheim', count: 9, avg_score: 96.0 },
+                    '74078': { name: 'Neckargartach', count: 7, avg_score: 95.8 },
+                    '74080': { name: 'Frankenbach', count: 21, avg_score: 95.4 }
+                }
+            }
+        };
+
+        function addMessage(sender, text) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            messageDiv.innerHTML = `
+                <div>
+                    <div class="message-label">${sender === 'user' ? '👤 You' : '🤖 AI Assistant'}</div>
+                    <div class="message-content">${text}</div>
+                </div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTyping() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div>
+                    <div class="typing-indicator active">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        async function getAIResponse(question) {
+    const lowerQ = question.toLowerCase();
+    
+    // Postal code queries
+    if (lowerQ.includes('74072') || lowerQ.includes('innenstadt')) {
+        const data = treeData.stats.postal_codes['74072'];
+        return `📮 <strong>Postal Code 74072 (${data.name})</strong><br><br>
+            I found <strong>${data.count} excellent locations</strong> in ${data.name} with an average score of <strong>${data.avg_score}/100</strong>!<br><br>
+            🏆 <strong>Top Location:</strong><br>
+            • Score: 96.5/100<br>
+            • Heat Priority: EXTREME (98/100) 🔥<br>
+            • Benefits: 3 schools, ~267 residents nearby<br>
+            • Recommended: Ahornblättrige Platane or Winterlinde<br>
+            • Cooling: -2.5°C in 20m radius<br><br>
+            📍 <a href="final_ranked_map.html?postal=74072" target="_blank" style="display: inline-block; padding: 8px 15px; background: #2e7d32; color: white; text-decoration: none; border-radius: 5px;">View ${data.count} locations on map →</a>`;
+    }
+    
+    if (lowerQ.includes('74074') || lowerQ.includes('böckingen')) {
+        const data = treeData.stats.postal_codes['74074'];
+        return `📮 <strong>Postal Code 74074 (${data.name})</strong><br><br>
+            This is our TOP district! <strong>${data.count} locations</strong> with average score <strong>${data.avg_score}/100</strong>.<br><br>
+            ${data.name} has the most tree planting opportunities in Heilbronn!<br><br>
+            📍 <a href="final_ranked_map.html?postal=74074" target="_blank" style="display: inline-block; padding: 8px 15px; background: #2e7d32; color: white; text-decoration: none; border-radius: 5px;">View ${data.count} locations on map →</a>`;
+    }
+    
+    if (lowerQ.includes('74076') || lowerQ.includes('sontheim')) {
+        const data = treeData.stats.postal_codes['74076'];
+        return `📮 <strong>Postal Code 74076 (${data.name})</strong><br><br>
+            Found <strong>${data.count} locations</strong> in ${data.name} with average score <strong>${data.avg_score}/100</strong>.<br><br>
+            📍 <a href="final_ranked_map.html?postal=74076" target="_blank" style="display: inline-block; padding: 8px 15px; background: #2e7d32; color: white; text-decoration: none; border-radius: 5px;">View ${data.count} locations on map →</a>`;
+    }
+    
+    if (lowerQ.includes('74078') || lowerQ.includes('neckargartach')) {
+        const data = treeData.stats.postal_codes['74078'];
+        return `📮 <strong>Postal Code 74078 (${data.name})</strong><br><br>
+            Found <strong>${data.count} locations</strong> in ${data.name} with average score <strong>${data.avg_score}/100</strong>.<br><br>
+            📍 <a href="final_ranked_map.html?postal=74078" target="_blank" style="display: inline-block; padding: 8px 15px; background: #2e7d32; color: white; text-decoration: none; border-radius: 5px;">View ${data.count} locations on map →</a>`;
+    }
+    
+    if (lowerQ.includes('74080') || lowerQ.includes('frankenbach')) {
+        const data = treeData.stats.postal_codes['74080'];
+        return `📮 <strong>Postal Code 74080 (${data.name})</strong><br><br>
+            Found <strong>${data.count} locations</strong> in ${data.name} with average score <strong>${data.avg_score}/100</strong>.<br><br>
+            📍 <a href="final_ranked_map.html?postal=74080" target="_blank" style="display: inline-block; padding: 8px 15px; background: #2e7d32; color: white; text-decoration: none; border-radius: 5px;">View ${data.count} locations on map →</a>`;
+    }
+    
+            
+            // Default response
+            return `I can help you with:<br><br>
+                • 📮 Specific postal codes (74072, 74074, 74076, 74078, 74080)<br>
+                • 🏆 Why certain locations are ranked highly<br>
+                • 🌍 Environmental impact calculations<br>
+                • 🔥 Heat priority analysis<br>
+                • 📍 Navigation to specific locations<br><br>
+                Try asking: "Show me trees in postal code 74074" or "What is the environmental impact?"`;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const question = input.value.trim();
+            
+            if (!question) return;
+            
+            // Add user message
+            addMessage('user', question);
+            input.value = '';
+            
+            // Disable input
+            sendButton.disabled = true;
+            input.disabled = true;
+            
+            // Show typing
+            showTyping();
+            
+            // Simulate thinking time
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Get AI response
+            const response = await getAIResponse(question);
+            
+            // Hide typing and show response
+            hideTyping();
+            addMessage('assistant', response);
+            
+            // Re-enable input
+            sendButton.disabled = false;
+            input.disabled = false;
+            input.focus();
+        }
+
+        function askQuestion(question) {
+            document.getElementById('userInput').value = question;
+            sendMessage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Auto-focus input
+        document.getElementById('userInput').focus();
+    </script>
+</body>
+</html>

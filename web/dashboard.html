@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌳 Heilbronn Tree Planting - Master Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 56px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 24px;
+            opacity: 0.9;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .card-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2e7d32;
+        }
+
+        .card-description {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .card.highlight {
+            background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%);
+            color: white;
+        }
+
+        .card.highlight .card-title {
+            color: white;
+        }
+
+        .card.highlight .card-description {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .stats-banner {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            text-align: center;
+        }
+
+        .stat-item {
+            padding: 20px;
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2e7d32;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 Heilbronn Tree Planting System</h1>
+            <p>AI-Powered Urban Forestry Platform</p>
+        </div>
+
+        <div class="stats-banner">
+            <!-- Hero Stats -->
+        <!-- Hero Stats - DUAL DISPLAY -->
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="display: inline-flex; gap: 20px; background: white; padding: 15px 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                <div>
+                    <span style="font-size: 14px; color: #6c757d;">Full Analysis</span>
+                    <h3 style="margin: 5px 0; color: #667eea; font-size: 24px;">114,982</h3>
+                </div>
+                <div style="width: 2px; background: #e9ecef;"></div>
+                <div>
+                    <span style="font-size: 14px; color: #6c757d;">Fresh Data ✅</span>
+                    <h3 style="margin: 5px 0; color: #4caf50; font-size: 24px;">13,882</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🆕</div>
+                <div class="stat-number">13,882</div>
+                <div class="stat-label">Verified Fresh Locations</div>
+                <div class="stat-sublabel" style="font-size: 12px; color: #6c757d; margin-top: 8px;">
+                    ✅ 12.1% of total (2020+ data)
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🗺️</div>
+                <div class="stat-number">1.39 km²</div>
+                <div class="stat-label">Fresh Plantable Area</div>
+                <div class="stat-sublabel" style="font-size: 12px; color: #6c757d; margin-top: 8px;">
+                    Verified current zones
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-number">100/100</div>
+                <div class="stat-label">Top Score</div>
+                <div class="stat-sublabel" style="font-size: 12px; color: #6c757d; margin-top: 8px;">
+                    5 perfect locations found
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🌱</div>
+                <div class="stat-number">305 tonnes</div>
+                <div class="stat-label">CO₂ Reduction/year</div>
+                <div class="stat-sublabel" style="font-size: 12px; color: #6c757d; margin-top: 8px;">
+                    Est. 15,000 trees potential
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Fresh Data Highlight -->
+<div style="background: white; padding: 30px; border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin: 30px 0;">
+    <h2 style="margin: 0 0 25px 0; color: #2e7d32; text-align: center;">
+        📊 Key Metrics Comparison
+    </h2>
+    
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #f8f9fa;">
+                <th style="padding: 15px; text-align: left; border-bottom: 2px solid #dee2e6;">Metric</th>
+                <th style="padding: 15px; text-align: center; border-bottom: 2px solid #dee2e6;">Full Analysis</th>
+                <th style="padding: 15px; text-align: center; border-bottom: 2px solid #dee2e6; background: #e8f5e9;">
+                    Fresh Data ✅
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 15px; border-bottom: 1px solid #dee2e6;">
+                    <strong>Tree Locations</strong>
+                </td>
+                <td style="padding: 15px; text-align: center; border-bottom: 1px solid #dee2e6; color: #6c757d;">
+                    114,982
+                </td>
+                <td style="padding: 15px; text-align: center; border-bottom: 1px solid #dee2e6; background: #f1f8f4; color: #2e7d32; font-weight: bold;">
+                    13,882
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 15px; border-bottom: 1px solid #dee2e6;">
+                    <strong>Plantable Area</strong>
+                </td>
+                <td style="padding: 15px; text-align: center; border-bottom: 1px solid #dee2e6; color: #6c757d;">
+                    11.50 km²
+                </td>
+                <td style="padding: 15px; text-align: center; border-bottom: 1px solid #dee2e6; background: #f1f8f4; color: #2e7d32; font-weight: bold;">
+                    1.39 km²
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 15px; border-bottom: 1px solid #dee2e6;">
+                    <strong>Top Score</strong>
+                </td>
+                <td style="padding: 15px; text-align: center; border-bottom: 1px solid #dee2e6; color: #6c757d;">
+                    100/100
+                </td>
+                <td style="padding: 15px; text-align: center; border-bottom: 1px solid #dee2e6; background: #f1f8f4; color: #2e7d32; font-weight: bold;">
+                    100/100
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 15px; border-bottom: 1px solid #dee2e6;">
+                    <strong>Average Score</strong>
+                </td>
+                <td style="padding: 15px; text-align: center; border-bottom: 1px solid #dee2e6; color: #6c757d;">
+                    59.13
+                </td>
+                <td style="padding: 15px; text-align: center; border-bottom: 1px solid #dee2e6; background: #f1f8f4; color: #2e7d32; font-weight: bold;">
+                    63.93 ⬆️
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 15px;">
+                    <strong>Data Quality</strong>
+                </td>
+                <td style="padding: 15px; text-align: center; color: #856404;">
+                    Mixed (2013-2025)
+                </td>
+                <td style="padding: 15px; text-align: center; background: #f1f8f4; color: #2e7d32; font-weight: bold;">
+                    ✅ Verified (2020-2025)
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+        <div class="card-grid">
+            <a href="complete_map.html" class="card highlight">
+                <div class="card-icon">🗺️</div>
+                <div class="card-title">Interactive Map</div>
+                <div class="card-description">
+                    Explore all layers: heat map, exclusion zones, green spaces, and plantable areas.
+                </div>
+            </a>
+
+            <!-- <a href="final_ranked_map.html" class="card">
+                <div class="card-icon">🏆</div>
+                <div class="card-title">Top 100 Locations</div>
+                <div class="card-description">
+                    View the highest-ranked tree planting locations with detailed scoring.
+                </div>
+            </a> -->
+
+            <a href="chat_assistant.html" class="card">
+                <div class="card-icon">🤖</div>
+                <div class="card-title">AI Chat Assistant</div>
+                <div class="card-description">
+                    Ask questions about tree locations, heat priorities, and environmental impact.
+                </div>
+            </a>
+
+            <!-- <a href="impact_simulator.html" class="card">
+                <div class="card-icon">🎬</div>
+                <div class="card-title">Impact Simulator</div>
+                <div class="card-description">
+                    See the before/after transformation when planting trees across Heilbronn.
+                </div>
+            </a> -->
+
+            <!-- <a href="navigation.html" class="card">
+                <div class="card-icon">📍</div>
+                <div class="card-title">Navigation</div>
+                <div class="card-description">
+                    Get GPS coordinates and Google Maps links to visit locations in person.
+                </div>
+            </a> -->
+
+            <!-- <a href="all_locations_map.html" class="card highlight">
+                <div class="card-icon">🌍</div>
+                <div class="card-title">All Locations Map</div>
+                <div class="card-description">
+                    Explore ALL 115,019 tree locations with interactive filtering and clustering.
+                </div>
+            </a> -->
+
+            <!-- <a href="../data/outputs/TOP_20_NAVIGATION.csv" class="card" download>
+                <div class="card-icon">📊</div>
+                <div class="card-title">Download Data</div>
+                <div class="card-description">
+                    Export top locations as CSV for city planners and GIS systems.
+                </div>
+            </a> -->
+            <a href="data_explorer.html" class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Data & Exclusions</div>
+                <div class="card-description">
+                    Explore the 8 datasets analyzed and 32,557 features excluded for safe tree planting.
+                </div>
+            </a>
+            <a href="fresh_data_map.html" class="card highlight">
+                <div class="card-icon">🆕</div>
+                <div class="card-title">Fresh Data Locations</div>
+                <div class="card-description">
+                    Tree locations verified with current data (2020+) - FIELD TESTED! 
+                    High accuracy for real-world deployment.
+                </div>
+            </a>
+            <a href="fresh_data_exploration.html" class="card highlight">
+                <div class="card-icon">🆕</div>
+                <div class="card-title">Fresh Data Explorer ✅</div>
+                <div class="card-description">
+                    13,882 locations verified with 2020+ data. Scientific discovery: data freshness matters!
+                    Shows our adaptive methodology and field validation process.
+                </div>
+            </a>
+            <a href="fresh_complete_map.html" class="card highlight">
+                <div class="card-icon">🗺️</div>
+                <div class="card-title">Fresh Complete Map 🆕</div>
+                <div class="card-description">
+                    All layers visualized: 13,882 verified locations + fresh buildings + roads + trees + water.
+                    The WOW factor for your presentation!
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

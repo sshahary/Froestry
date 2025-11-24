@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ All Tree Locations - Heilbronn</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        .legend {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .legend h3 {
+            margin: 0 0 15px 0;
+            color: #2e7d32;
+        }
+
+        .legend-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .legend-item > div {
+            flex: 1;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .control-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: #2e7d32;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .control-button:hover {
+            background: #1b5e20;
+            transform: scale(1.05);
+        }
+
+        .filter-input {
+            padding: 10px 15px;
+            border: 2px solid #2e7d32;
+            border-radius: 25px;
+            outline: none;
+            width: 200px;
+        }
+
+        .info-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .info-panel h2 {
+            margin: 0 0 10px 0;
+            color: #2e7d32;
+            font-size: 18px;
+        }
+
+        .info-stat {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .info-stat strong {
+            color: #2e7d32;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10000;
+            text-align: center;
+        }
+
+        .loading h2 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2e7d32;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        <h2>🌳 Loading tree locations...</h2>
+        <div class="spinner"></div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="info-panel">
+        <h2>🌳 All Tree Locations</h2>
+        <div class="info-stat"><strong>Total Locations:</strong> <span id="totalCount">Loading...</span></div>
+        <div class="info-stat"><strong>Visible:</strong> <span id="visibleCount">0</span></div>
+        <div class="info-stat"><strong>Avg Score:</strong> <span id="avgScore">0</span></div>
+    </div>
+
+    <div class="legend">
+        <h3 style="margin: 0 0 15px 0;">📊 Score Legend</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px; line-height: 1.6; border-bottom: 2px solid #2e7d32; padding-bottom: 10px;">
+            <strong style="color: #2e7d32;">Higher score = Better location!</strong><br>
+            <span style="font-size: 12px;">Combines heat urgency, spatial quality, social impact & maintenance ease</span>
+        </p>
+        <div class="legend-item">
+            <div class="legend-color" style="background: darkgreen;"></div>
+            <div style="flex: 1;">
+                <strong>90-100 (Excellent)</strong><br>
+                <span style="font-size: 11px; color: #666;">🔥 EXTREME priority - Plant here first!</span>
+            </div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: green;"></div>
+            <div style="flex: 1;">
+                <strong>80-89 (Very Good)</strong><br>
+                <span style="font-size: 11px; color: #666;">🌡️ High priority - Great impact</span>
+            </div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: lightgreen;"></div>
+            <div style="flex: 1;">
+                <strong>70-79 (Good)</strong><br>
+                <span style="font-size: 11px; color: #666;">✅ Medium priority - Good location</span>
+            </div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: yellow;"></div>
+            <div style="flex: 1;">
+                <strong>60-69 (Fair)</strong><br>
+                <span style="font-size: 11px; color: #666;">⚠️ Lower priority - Some benefit</span>
+            </div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: orange;"></div>
+            <div style="flex: 1;">
+                <strong>50-59 (Poor)</strong><br>
+                <span style="font-size: 11px; color: #666;">⬇️ Lowest priority - Limited benefit</span>
+            </div>
+        </div>
+        
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+            <p style="font-size: 12px; color: #2e7d32; font-weight: bold; margin: 0; line-height: 1.4;">
+                💡 Focus on dark green dots first for maximum cooling impact!
+            </p>
+        </div>
+    </div>
+    <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
+    
+    <p style="font-size: 12px; color: #2e7d32; font-weight: bold; margin-top: 10px;">
+        💡 Focus on dark green markers first for maximum impact!
+    </p>
+</div>
+
+    <div class="controls">
+        <button class="control-button" onclick="toggleClustering()">
+            📍 Toggle Clustering
+        </button>
+        <input 
+            type="text" 
+            class="filter-input" 
+            placeholder="Min score (e.g., 80)"
+            id="scoreFilter"
+            onchange="filterByScore()"
+        />
+        <button class="control-button" onclick="showTop100()">
+            🏆 Top 100
+        </button>
+        <button class="control-button" onclick="resetView()">
+            🔄 Reset
+        </button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([49.142, 9.221], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let allLocations = [];
+        let markers = L.markerClusterGroup({
+            chunkedLoading: true,
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false
+        });
+        let individualMarkers = L.layerGroup();
+        let isClustered = true;
+
+        // Color based on score
+        function getColor(score) {
+            if (score >= 90) return 'darkgreen';
+            if (score >= 80) return 'green';
+            if (score >= 70) return 'lightgreen';
+            if (score >= 60) return 'yellow';
+            return 'orange';
+        }
+
+        // Try multiple file paths
+        const filePaths = [
+            'data/all_locations.geojson',
+            '../data/processed/scored_locations_all.geojson',
+            '../data/processed/top_100_locations.geojson',
+            '../data/processed/top_100_enhanced.geojson'
+        ];
+
+        async function loadData() {
+            for (let filePath of filePaths) {
+                try {
+                    console.log(`Trying to load: ${filePath}`);
+                    const response = await fetch(filePath);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log(`✅ Successfully loaded from: ${filePath}`);
+                        console.log(`   Features: ${data.features.length}`);
+                        
+                        allLocations = data.features;
+                        document.getElementById('totalCount').textContent = allLocations.length.toLocaleString();
+                        document.getElementById('loading').style.display = 'none';
+                        displayLocations(allLocations);
+                        return;
+                    }
+                } catch (error) {
+                    console.log(`   ❌ Failed to load: ${filePath}`);
+                }
+            }
+            
+            // If all paths fail
+            document.getElementById('loading').innerHTML = `
+                <h2 style="color: red;">❌ Error Loading Data</h2>
+                <p>Could not find location data file.</p>
+                <p style="margin-top: 10px;">Please run:</p>
+                <code style="background: #f0f0f0; padding: 10px; display: block; margin-top: 10px;">
+                    python scripts/export_all_locations_geojson.py
+                </code>
+            `;
+            document.getElementById('totalCount').textContent = 'Error';
+        }
+
+        function displayLocations(locations) {
+            // Clear existing markers
+            markers.clearLayers();
+            individualMarkers.clearLayers();
+
+            let totalScore = 0;
+            
+            locations.forEach(feature => {
+            const props = feature.properties;
+            const coords = feature.geometry.coordinates;
+            
+            // Handle both [lon, lat] and [lat, lon] formats
+            let lat, lon;
+            if (coords[1] > coords[0]) {
+                lat = coords[1];
+                lon = coords[0];
+            } else {
+                lat = coords[0];
+                lon = coords[1];
+            }
+            
+            totalScore += props.final_score || 0;
+
+            // Get all data
+            const rank = props.rank || 'N/A';
+            const finalScore = props.final_score || 0;
+            const heatScore = props.heat_score || 0;
+            const spatialScore = props.spatial_score || 0;
+            const socialScore = props.social_score || 0;
+            const maintenanceScore = props.maintenance_score || 0;
+            const postal = props.postal_code || 'Unknown';
+            const area = props.area_name || 'Heilbronn';
+            const locationType = props.location_type || 'Green Space';
+            const species = props.recommended_species || 'Oak or Linden (heat-tolerant)';
+            const cooling = props.cooling_estimate || '-2.0°C in 15m radius';
+            const schools = props.schools_nearby || 'Data not available';
+            const residents = props.residents_nearby || 'Data not available';
+            const utmX = props.utm_x || coords[0];
+            const utmY = props.utm_y || coords[1];
+
+            // Determine heat priority label
+            let heatLabel = 'MODERATE';
+            let heatColor = '#ffc107';
+            if (heatScore >= 80) {
+                heatLabel = 'EXTREME';
+                heatColor = '#dc3545';
+            } else if (heatScore >= 60) {
+                heatLabel = 'HIGH';
+                heatColor = '#ff9800';
+            }
+
+            // Create marker
+            const marker = L.circleMarker([lat, lon], {
+                radius: 6,
+                fillColor: getColor(finalScore),
+                color: '#fff',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            });
+
+            // Create popup with all details
+            marker.bindPopup(`
+                <div style="min-width: 320px; max-width: 400px; font-family: 'Segoe UI', sans-serif;">
+                    <h3 style="margin: 0 0 15px 0; color: ${getColor(finalScore)}; border-bottom: 3px solid ${getColor(finalScore)}; padding-bottom: 8px;">
+                        🏆 Rank #${rank}
+                    </h3>
+                    
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 10px 0;">
+                        <p style="margin: 0 0 8px 0; font-size: 14px;"><strong>📍 Location:</strong> ${locationType}</p>
+                        <p style="margin: 0; font-size: 14px;"><strong>📮 Postal:</strong> ${postal} - ${area}</p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, ${heatColor} 0%, ${heatColor}dd 100%); color: white; padding: 12px; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                        <p style="margin: 0; font-size: 15px; font-weight: bold;">🔥 Heat Priority: ${heatLabel}</p>
+                        <p style="margin: 5px 0 0 0; font-size: 13px;">${heatScore.toFixed(0)}/100 - ${heatLabel === 'EXTREME' ? 'Urgent cooling needed!' : 'Needs cooling'}</p>
+                    </div>
+                    
+                    <div style="background: #d4edda; padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #28a745;">
+                        <p style="margin: 0 0 5px 0; font-size: 13px; font-weight: bold; color: #155724;">🌳 Recommended Tree Species:</p>
+                        <p style="margin: 0; font-size: 12px; color: #155724; line-height: 1.4;">${species}</p>
+                    </div>
+                    
+                    <div style="background: #d1ecf1; padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #17a2b8;">
+                        <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; color: #0c5460;">👥 Social Impact:</p>
+                        <p style="margin: 0 0 5px 0; margin-left: 10px; font-size: 12px; color: #0c5460;">• ${schools}</p>
+                        <p style="margin: 0 0 5px 0; margin-left: 10px; font-size: 12px; color: #0c5460;">• ${residents}</p>
+                        <p style="margin: 5px 0 0 0; font-size: 11px; color: #0c5460; opacity: 0.8;">⚠️ Estimates based on ALKIS land use data</p>
+                    </div>
+                    
+                    <div style="background: #e7f3ff; padding: 12px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #007bff;">
+                        <p style="margin: 0 0 5px 0; font-size: 13px; color: #004085; font-weight: bold;">💰 Estimated Cooling Effect:</p>
+                        <p style="margin: 0; font-size: 14px; font-weight: bold; color: #0066cc;">${cooling}</p>
+                    </div>
+                    
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #dee2e6;">
+                    
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 10px 0;">
+                        <p style="margin: 0 0 10px 0; font-weight: bold; font-size: 14px; color: #495057;">📊 Scoring Breakdown:</p>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="font-size: 12px; color: #666;">🔥 Heat Priority (40%)</span>
+                                <strong style="font-size: 12px; color: #dc3545;">${heatScore.toFixed(1)}/100</strong>
+                            </div>
+                            <div style="background: #e9ecef; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #dc3545, #ff6b6b); height: 100%; width: ${heatScore}%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="font-size: 12px; color: #666;">📏 Spatial Quality (30%)</span>
+                                <strong style="font-size: 12px; color: #007bff;">${spatialScore.toFixed(1)}/100</strong>
+                            </div>
+                            <div style="background: #e9ecef; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #007bff, #66b3ff); height: 100%; width: ${spatialScore}%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="font-size: 12px; color: #666;">👥 Social Impact (20%)</span>
+                                <strong style="font-size: 12px; color: #28a745;">${socialScore.toFixed(1)}/100</strong>
+                            </div>
+                            <div style="background: #e9ecef; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #28a745, #66cc77); height: 100%; width: ${socialScore}%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="font-size: 12px; color: #666;">🚜 Maintenance (10%)</span>
+                                <strong style="font-size: 12px; color: #ffc107;">${maintenanceScore.toFixed(1)}/100</strong>
+                            </div>
+                            <div style="background: #e9ecef; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #ffc107, #ffdb4d); height: 100%; width: ${maintenanceScore}%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid ${getColor(finalScore)};">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 14px; font-weight: bold; color: #495057;">⭐ FINAL SCORE:</span>
+                                <span style="font-size: 20px; font-weight: bold; color: ${getColor(finalScore)};">${finalScore.toFixed(2)}/100</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #dee2e6;">
+                    
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; font-size: 12px;">
+                        <p style="margin: 0 0 8px 0; font-weight: bold; color: #495057;">📐 Coordinates:</p>
+                        <p style="margin: 0 0 5px 0; color: #6c757d;">
+                            <strong>Lat/Lon (WGS84):</strong><br>
+                            ${lat.toFixed(6)}, ${lon.toFixed(6)}
+                        </p>
+                        <p style="margin: 0; color: #6c757d;">
+                            <strong>UTM (EPSG:25832):</strong><br>
+                            X=${utmX.toFixed(1)}, Y=${utmY.toFixed(1)}
+                        </p>
+                    </div>
+                    
+                    <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" 
+                    style="display: block; margin-top: 15px; padding: 14px; 
+                            background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%); 
+                            color: white; text-decoration: none; text-align: center;
+                            border-radius: 8px; font-weight: bold; font-size: 14px;
+                            box-shadow: 0 3px 8px rgba(46, 125, 50, 0.3);
+                            transition: all 0.3s;">
+                        🗺️ Open in Google Maps
+                    </a>
+                </div>
+            `, {
+                maxWidth: 420,
+                className: 'custom-popup'
+            });
+
+            markers.addLayer(marker);
+            individualMarkers.addLayer(marker);
+        });
+
+            // Add to map
+            if (isClustered) {
+                map.addLayer(markers);
+            } else {
+                map.addLayer(individualMarkers);
+            }
+
+            // Update stats
+            document.getElementById('visibleCount').textContent = locations.length.toLocaleString();
+            const avgScore = totalScore / locations.length;
+            document.getElementById('avgScore').textContent = avgScore.toFixed(1);
+        }
+
+        function toggleClustering() {
+            if (isClustered) {
+                map.removeLayer(markers);
+                map.addLayer(individualMarkers);
+                isClustered = false;
+            } else {
+                map.removeLayer(individualMarkers);
+                map.addLayer(markers);
+                isClustered = true;
+            }
+        }
+
+        function filterByScore() {
+            const minScore = parseFloat(document.getElementById('scoreFilter').value) || 0;
+            const filtered = allLocations.filter(f => (f.properties.final_score || 0) >= minScore);
+            displayLocations(filtered);
+        }
+
+        function showTop100() {
+            const top100 = allLocations
+                .sort((a, b) => (b.properties.final_score || 0) - (a.properties.final_score || 0))
+                .slice(0, 100);
+            displayLocations(top100);
+            
+            // Zoom to bounds
+            if (top100.length > 0) {
+                const bounds = L.latLngBounds(top100.map(f => {
+                    const coords = f.geometry.coordinates;
+                    return coords[1] > coords[0] ? [coords[1], coords[0]] : [coords[0], coords[1]];
+                }));
+                map.fitBounds(bounds);
+            }
+        }
+
+        function resetView() {
+            document.getElementById('scoreFilter').value = '';
+            displayLocations(allLocations);
+            map.setView([49.142, 9.221], 13);
+        }
+
+        // Load data on page load
+        loadData();
+    </script>
+</body>
+</html>

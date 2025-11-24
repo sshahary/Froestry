@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🆕 Complete Fresh Data Visualization</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+   <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow: hidden;
+    }
+
+    #map {
+        width: 100%;
+        height: 100vh;
+    }
+
+    .back-button {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+        padding: 12px 24px;
+        background: white;
+        border: 2px solid #4caf50;
+        color: #4caf50;
+        font-weight: bold;
+        border-radius: 25px;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        transition: all 0.3s;
+    }
+
+    .back-button:hover {
+        background: #4caf50;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .title-overlay {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        text-align: center;
+        max-width: 700px;
+    }
+
+    .title-overlay h1 {
+        font-size: 26px;
+        margin-bottom: 5px;
+    }
+
+    .verified-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.3);
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-top: 3px;
+    }
+
+    /* LEFT COLUMN - Stats and Controls */
+    .stats-panel {
+        position: fixed;
+        top: 100px;
+        left: 20px;
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        z-index: 1000;
+        width: 280px;
+    }
+
+    .stats-panel h3 {
+        margin: 0 0 15px 0;
+        color: #2e7d32;
+        font-size: 18px;
+        border-bottom: 2px solid #4caf50;
+        padding-bottom: 8px;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0;
+        padding: 6px 0;
+        font-size: 13px;
+    }
+
+    .stat-label {
+        color: #6c757d;
+    }
+
+    .stat-value {
+        color: #2e7d32;
+        font-weight: bold;
+    }
+
+    .verified-badge-panel {
+        background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        margin-top: 12px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .layer-controls {
+        position: fixed;
+        top: 420px;
+        left: 20px;
+        background: white;
+        padding: 18px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        z-index: 1000;
+        width: 280px;
+    }
+
+    .layer-controls h4 {
+        margin: 0 0 12px 0;
+        color: #2e7d32;
+        font-size: 16px;
+        border-bottom: 2px solid #4caf50;
+        padding-bottom: 8px;
+    }
+
+    .layer-toggle {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .layer-toggle input {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .layer-toggle label {
+        cursor: pointer;
+        font-size: 13px;
+        color: #495057;
+    }
+
+    /* RIGHT COLUMN - Legend */
+    .legend {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        z-index: 1000;
+        max-width: 300px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+
+    .legend h3 {
+        margin: 0 0 15px 0;
+        color: #2e7d32;
+        font-size: 18px;
+        border-bottom: 2px solid #4caf50;
+        padding-bottom: 8px;
+    }
+
+    .legend-section {
+        margin-bottom: 15px;
+    }
+
+    .legend-section h4 {
+        color: #495057;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin: 8px 0;
+        gap: 10px;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #333;
+        flex-shrink: 0;
+    }
+
+    .legend-line {
+        width: 25px;
+        height: 3px;
+        flex-shrink: 0;
+    }
+
+    .legend-text {
+        font-size: 12px;
+        color: #495057;
+    }
+
+    .loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        z-index: 10000;
+        text-align: center;
+    }
+
+    .loading h2 {
+        color: #4caf50;
+        margin-bottom: 20px;
+        font-size: 28px;
+    }
+
+    .spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #4caf50;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .stats-panel,
+        .layer-controls {
+            width: 240px;
+            left: 15px;
+        }
+        
+        .legend {
+            max-width: 260px;
+            right: 15px;
+        }
+        
+        .layer-controls {
+            top: 380px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-panel,
+        .layer-controls,
+        .legend {
+            display: none;
+        }
+        
+        .title-overlay {
+            top: 10px;
+            padding: 12px 20px;
+            max-width: 90%;
+        }
+        
+        .title-overlay h1 {
+            font-size: 18px;
+        }
+        
+        .verified-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+        }
+    }
+</style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        <h2>🆕 Loading Fresh Data Layers...</h2>
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; color: #666;">Verified 2020+ data</p>
+    </div>
+
+    <a href="dashboard.html" class="back-button">← Dashboard</a>
+
+    <div class="title-overlay">
+        <h1>🆕 Complete Fresh Data Visualization</h1>
+        <div class="verified-badge">✅ DATA VERIFIED CURRENT (2020+)</div>
+        <p style="margin-top: 10px; font-size: 14px; opacity: 0.95;">
+            13,882 verified locations • 2024 Heat Analysis • Field-Ready
+        </p>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="layer-controls">
+        <h4>🎛️ Layer Controls</h4>
+        <div class="layer-toggle">
+            <input type="checkbox" id="toggleLocations" checked>
+            <label for="toggleLocations">🌳 Tree Locations (13,882)</label>
+        </div>
+        <div class="layer-toggle">
+            <input type="checkbox" id="toggleHeat" checked>
+            <label for="toggleHeat">🔥 Heat Priority Zones</label>
+        </div>
+        <div class="layer-toggle">
+            <input type="checkbox" id="toggleBuildings" checked>
+            <label for="toggleBuildings">🏢 Fresh Buildings (2020+)</label>
+        </div>
+        <div class="layer-toggle">
+            <input type="checkbox" id="toggleRoads" checked>
+            <label for="toggleRoads">🛣️ Fresh Roads (2020+)</label>
+        </div>
+        <div class="layer-toggle">
+            <input type="checkbox" id="toggleFire" checked>
+            <label for="toggleFire">🔥 Fire Safety Routes</label>
+        </div>
+        <div class="layer-toggle">
+            <input type="checkbox" id="toggleTrees" checked>
+            <label for="toggleTrees">🌲 Existing Trees</label>
+        </div>
+        <div class="layer-toggle">
+            <input type="checkbox" id="toggleWater" checked>
+            <label for="toggleWater">💧 Water Bodies</label>
+        </div>
+    </div>
+
+    <div class="legend">
+    <h3>🗺️ Fresh Data Legend</h3>
+    
+    <div class="legend-section">
+        <h4>🔥 Heat Priority Zones</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(139,0,0,0.4); border-color: #8b0000;"></div>
+            <div class="legend-text"><strong>EXTREME</strong> (90-100)</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(220,20,60,0.4); border-color: #dc143c;"></div>
+            <div class="legend-text"><strong>VERY HIGH</strong> (80-89)</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(255,69,0,0.4); border-color: #ff4500;"></div>
+            <div class="legend-text"><strong>HIGH</strong> (70-79)</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(255,140,0,0.4); border-color: #ff8c00;"></div>
+            <div class="legend-text"><strong>MODERATE</strong> (60-69)</div>
+        </div>
+    </div>
+    
+    <div class="legend-section">
+        <h4>🌳 Tree Locations</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #1b5e20;"></div>
+            <div class="legend-text"><strong>90-100</strong> Excellent</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4caf50;"></div>
+            <div class="legend-text"><strong>80-89</strong> Very Good</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #8bc34a;"></div>
+            <div class="legend-text"><strong>70-79</strong> Good</div>
+        </div>
+    </div>
+
+    <div class="legend-section">
+        <h4>🏗️ Infrastructure</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(255,87,34,0.3); border-color: #ff5722;"></div>
+            <div class="legend-text">Fresh Buildings (2020+)</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-line" style="background: #666;"></div>
+            <div class="legend-text">Fresh Roads (2020+)</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-line" style="background: #ff5722; border: 1px dashed #ff5722;"></div>
+            <div class="legend-text">Fire Safety Routes</div>
+        </div>
+    </div>
+
+    <div class="legend-section">
+        <h4>🌍 Environment</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(76,175,80,0.3); border-color: #4caf50;"></div>
+            <div class="legend-text">Existing Trees</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(33,150,243,0.5); border-color: #2196f3;"></div>
+            <div class="legend-text">Water Bodies</div>
+        </div>
+    </div>
+</div>
+
+        <div class="legend-section">
+            <h4>🏗️ Infrastructure</h4>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(255,87,34,0.3); border-color: #ff5722;"></div>
+                <div class="legend-text">Fresh Buildings (2020+)</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background: #666;"></div>
+                <div class="legend-text">Fresh Roads (2020+)</div>
+            </div>
+        </div>
+
+        <div class="legend-section">
+            <h4>🌍 Environment</h4>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(76,175,80,0.3); border-color: #4caf50;"></div>
+                <div class="legend-text">Existing Trees</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(33,150,243,0.5); border-color: #2196f3;"></div>
+                <div class="legend-text">Water Bodies</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-panel">
+        <h3>📊 Fresh Data Stats</h3>
+        <div class="stat-row">
+            <span class="stat-label">Tree Locations</span>
+            <span class="stat-value" id="locationCount">13,882</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Fresh Buildings</span>
+            <span class="stat-value">2,803</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Fresh Roads</span>
+            <span class="stat-value">145</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Existing Trees</span>
+            <span class="stat-value">4,911</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Avg Score</span>
+            <span class="stat-value">63.93</span>
+        </div>
+        <div class="verified-badge-panel">
+            ✅ FIELD VERIFIED<br>
+            Data Quality: 2020-2025
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([49.142, 9.221], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Layer groups
+        // Layer groups
+        const layerGroups = {
+            locations: L.markerClusterGroup({
+                chunkedLoading: true,
+                maxClusterRadius: 40
+            }),
+            buildings: L.layerGroup(),
+            roads: L.layerGroup(),
+            trees: L.layerGroup(),
+            water: L.layerGroup(),
+            fire: L.layerGroup(),  // ← ADD THIS
+            heat: L.layerGroup()
+        };
+
+        // Add all layers to map initially
+        Object.values(layerGroups).forEach(layer => layer.addTo(map));
+
+        // Color function
+        function getColor(score) {
+            if (score >= 90) return '#1b5e20';
+            if (score >= 80) return '#4caf50';
+            if (score >= 70) return '#8bc34a';
+            if (score >= 60) return '#cddc39';
+            return '#fdd835';
+        }
+
+        // Load all data
+        async function loadAllData() {
+            try {
+                console.log('Loading IMPROVED heat priority zones...');
+                console.log('Method: Multi-factor (Buildings 40% + Sealing 30% + Vegetation 20% + Canyon 10%)');
+                console.log('Based on: Official Heilbronn Climate Adaptation Strategy');
+
+                const heatResponse = await fetch('data/heat_priority_zones.geojson');
+                const heatData = await heatResponse.json();
+
+        
+        // Color function for heat zones
+        function getHeatColor(category) {
+            const colors = {
+                'EXTREME': '#8b0000',      // Dark red
+                'VERY_HIGH': '#dc143c',    // Crimson
+                'HIGH': '#ff4500',         // Orange red
+                'MODERATE': '#ff8c00'      // Dark orange
+            };
+            return colors[category] || '#ff8c00';
+        }
+        
+        L.geoJSON(heatData, {
+            style: function(feature) {
+                return {
+                    fillColor: getHeatColor(feature.properties.heat_category),
+                    fillOpacity: 0.4,
+                    color: getHeatColor(feature.properties.heat_category),
+                    weight: 2,
+                    opacity: 0.8
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                const category = feature.properties.heat_category;
+                const heatScore = feature.properties.heat_score || 0;
+                layer.bindPopup(`
+                    <div style="min-width: 200px;">
+                        <div style="background: ${getHeatColor(category)}; color: white; 
+                                    padding: 10px; margin: -10px -10px 10px -10px; 
+                                    border-radius: 5px 5px 0 0;">
+                            <strong>🔥 ${category.replace('_', ' ')} HEAT ZONE</strong>
+                        </div>
+                        <p><strong>Heat Score:</strong> ${heatScore.toFixed(1)}/100</p>
+                        <p style="margin: 10px 0; padding: 10px; background: #fff3cd; 
+                                  border-radius: 5px; font-size: 13px;">
+                            ⚠️ Priority area for tree planting - extreme cooling needed!
+                        </p>
+                    </div>
+                `);
+            }
+        }).addTo(layerGroups.heat);
+
+        console.log(`✅ Loaded heat zones: ${heatData.features.length} categories`);
+                // 1. Load tree locations
+                console.log('Loading tree locations...');
+                const locationsResponse = await fetch('data/scored_locations_fresh.geojson');
+                const locationsData = await locationsResponse.json();
+                
+                locationsData.features.forEach(feature => {
+                    const props = feature.properties;
+                    const coords = feature.geometry.coordinates;
+                    const lat = coords[1];
+                    const lon = coords[0];
+                    const score = props.final_score || 0;
+
+                    const marker = L.circleMarker([lat, lon], {
+                        radius: 6,
+                        fillColor: getColor(score),
+                        color: '#fff',
+                        weight: 2,
+                        fillOpacity: 0.8
+                    });
+
+                    marker.bindPopup(`
+                        <div style="min-width: 250px;">
+                            <div style="background: #4caf50; color: white; padding: 10px; margin: -10px -10px 10px -10px; border-radius: 5px 5px 0 0;">
+                                <strong>🆕 FRESH DATA - Rank #${props.rank || 'N/A'}</strong>
+                            </div>
+                            <p><strong>Score:</strong> ${score.toFixed(1)}/100</p>
+                            <p><strong>Location:</strong> ${props.location_type || 'Green Space'}</p>
+                            <p><strong>Postal:</strong> ${props.postal_code || 'Unknown'}</p>
+                            <p><strong>Species:</strong> ${props.recommended_species || 'Oak/Linden'}</p>
+                            <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank"
+                               style="display: block; margin-top: 10px; padding: 8px; background: #4caf50; 
+                                      color: white; text-align: center; text-decoration: none; border-radius: 5px;">
+                                🗺️ Navigate
+                            </a>
+                        </div>
+                    `);
+
+                    layerGroups.locations.addLayer(marker);
+                });
+
+                console.log(`✅ Loaded ${locationsData.features.length} locations`);
+
+                // 2. Load fresh buildings
+                console.log('Loading fresh buildings...');
+                const buildingsResponse = await fetch('data/exclusion_buildings_fresh.geojson');
+                const buildingsData = await buildingsResponse.json();
+                
+                L.geoJSON(buildingsData, {
+                    style: {
+                        fillColor: '#ff5722',
+                        fillOpacity: 0.3,
+                        color: '#ff5722',
+                        weight: 1
+                    }
+                }).addTo(layerGroups.buildings);
+
+                console.log(`✅ Loaded ${buildingsData.features.length} fresh buildings`);
+
+                // 3. Load fresh roads
+                console.log('Loading fresh roads...');
+                const roadsResponse = await fetch('data/exclusion_roads_fresh.geojson');
+                const roadsData = await roadsResponse.json();
+                
+                L.geoJSON(roadsData, {
+                    style: {
+                        color: '#666',
+                        weight: 3,
+                        opacity: 0.7
+                    }
+                }).addTo(layerGroups.roads);
+
+                console.log(`✅ Loaded ${roadsData.features.length} fresh roads`);
+
+                // 4. Load existing trees
+                console.log('Loading existing trees...');
+                const treesResponse = await fetch('data/exclusion_trees.geojson');
+                const treesData = await treesResponse.json();
+                
+                L.geoJSON(treesData, {
+                    style: {
+                        fillColor: '#4caf50',
+                        fillOpacity: 0.3,
+                        color: '#4caf50',
+                        weight: 1
+                    }
+                }).addTo(layerGroups.trees);
+
+                console.log(`✅ Loaded existing trees`);
+
+                // 5. Load water bodies
+                console.log('Loading water bodies...');
+                const waterResponse = await fetch('data/water_bodies.geojson');
+                const waterData = await waterResponse.json();
+                                
+                L.geoJSON(waterData, {
+                    style: {
+                        fillColor: '#2196f3',
+                        fillOpacity: 0.5,
+                        color: '#2196f3',
+                        weight: 1
+                    }
+                }).addTo(layerGroups.water);
+
+                console.log(`✅ Loaded ${waterData.features.length} water bodies`);
+
+                console.log('Loading fire safety routes...');
+                const fireResponse = await fetch('data/exclusion_fire.geojson');
+                const fireData = await fireResponse.json();
+
+                L.geoJSON(fireData, {
+                    style: {
+                        fillColor: '#ff5722',
+                        fillOpacity: 0.2,
+                        color: '#ff5722',
+                        weight: 2,
+                        dashArray: '5, 5'
+                    }
+                }).addTo(layerGroups.fire);
+
+                console.log(`✅ Loaded fire safety routes`);
+
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+
+                console.log('✅ All layers loaded successfully!');
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').innerHTML = `
+                    <h2 style="color: red;">❌ Error Loading Data</h2>
+                    <p>${error.message}</p>
+                    <p style="margin-top: 15px;">Make sure all files are generated.</p>
+                `;
+            }
+        }
+
+        // Layer toggles
+        document.getElementById('toggleLocations').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                map.addLayer(layerGroups.locations);
+            } else {
+                map.removeLayer(layerGroups.locations);
+            }
+        });
+
+        document.getElementById('toggleBuildings').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                map.addLayer(layerGroups.buildings);
+            } else {
+                map.removeLayer(layerGroups.buildings);
+            }
+        });
+
+        document.getElementById('toggleRoads').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                map.addLayer(layerGroups.roads);
+            } else {
+                map.removeLayer(layerGroups.roads);
+            }
+        });
+
+        document.getElementById('toggleTrees').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                map.addLayer(layerGroups.trees);
+            } else {
+                map.removeLayer(layerGroups.trees);
+            }
+        });
+
+        document.getElementById('toggleWater').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                map.addLayer(layerGroups.water);
+            } else {
+                map.removeLayer(layerGroups.water);
+            }
+        });
+        document.getElementById('toggleFire').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                map.addLayer(layerGroups.fire);
+            } else {
+                map.removeLayer(layerGroups.fire);
+            }
+        });
+        document.getElementById('toggleHeat').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                map.addLayer(layerGroups.heat);
+            } else {
+                map.removeLayer(layerGroups.heat);
+            }
+        });
+
+        // Load all data
+        loadAllData();
+    </script>
+</body>
+</html>

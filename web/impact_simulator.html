@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌳 Impact Simulator - Before & After</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .simulator-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .scenario {
+            position: relative;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .scenario.before {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+
+        .scenario.after {
+            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+            color: white;
+        }
+
+        .scenario h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .heat-visualization {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .heat-bar {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            transition: all 1s ease;
+        }
+
+        .heat-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 1s ease;
+            white-space: nowrap; /* Prevent numbers from wrapping */
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .slider-container {
+            margin: 40px 0;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .slider-label {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 20px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 15px;
+            border-radius: 10px;
+            background: #e0e0e0;
+            outline: none;
+            /* Cross-browser compatibility for custom range input styling */
+            -webkit-appearance: none;
+            appearance: none; 
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #2e7d32;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #2e7d32;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border: none;
+        }
+
+        .slider-value {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 15px;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .impact-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .metric-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            margin-top: 30px;
+            background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(46, 125, 50, 0.4);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 Impact Simulator</h1>
+            <p>See the transformation when we plant trees in Heilbronn</p>
+        </div>
+
+        <div class="simulator-container">
+            <div class="comparison">
+                <div class="scenario before">
+                    <h2>😰 BEFORE - Current State</h2>
+                    <div class="heat-visualization">
+                        <div class="heat-bar" id="heatBarBefore">
+                            <div class="heat-segment" style="background: #ff4444; width: 79.7%;">
+                                HOT<br>79.7%
+                            </div>
+                            <div class="heat-segment" style="background: #ff8c00; width: 9.9%;">
+                                9.9%
+                            </div>
+                            <div class="heat-segment" style="background: #ffd700; width: 10.0%;">
+                                10%
+                            </div>
+                            <div class="heat-segment" style="background: #90ee90; width: 0.4%;">
+                                0.4%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value">🔥 79.7%</span>
+                            <span class="stat-label">Extremely Hot</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">New Trees</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">0 t</span>
+                            <span class="stat-label">CO₂ Removed</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">😓</span>
+                            <span class="stat-label">Uncomfortable</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scenario after">
+                    <h2>😊 AFTER - With Trees</h2>
+                    <div class="heat-visualization">
+                        <div class="heat-bar" id="heatBarAfter">
+                            <div class="heat-segment" style="background: #ff4444; width: 79.7%;">
+                                HOT<br>79.7%
+                            </div>
+                            <div class="heat-segment" style="background: #ff8c00; width: 9.9%;">
+                                9.9%
+                            </div>
+                            <div class="heat-segment" style="background: #ffd700; width: 10.0%;">
+                                10%
+                            </div>
+                            <div class="heat-segment" style="background: #90ee90; width: 0.4%;">
+                                0.4%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value" id="coolPercent">🌡️ 79.7%</span>
+                            <span class="stat-label">Still Hot</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="treesPlanted">0</span>
+                            <span class="stat-label">Trees Planted</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="co2Removed">0 t</span>
+                            <span class="stat-label">CO₂/year</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="comfort">😐</span>
+                            <span class="stat-label">Comfort Level</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slider-container">
+                <div class="slider-label">
+                    🎚️ How many trees should we plant?
+                </div>
+                <input 
+                    type="range" 
+                    min="0" 
+                    max="115019" 
+                    value="0" 
+                    class="slider" 
+                    id="treeSlider"
+                    oninput="updateSimulation(this.value)"
+                />
+                <div class="slider-value" id="sliderValue">
+                    0 trees (0% of capacity)
+                </div>
+            </div>
+
+            <div class="impact-metrics">
+                <div class="metric-card">
+                    <div class="metric-icon">💨</div>
+                    <span class="metric-value" id="metricCO2">0</span>
+                    <div class="metric-label">tonnes CO₂/year</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">🌡️</div>
+                    <span class="metric-value" id="metricTemp">0°C</span>
+                    <div class="metric-label">Cooling Effect</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">👥</div>
+                    <span class="metric-value" id="metricPeople">0</span>
+                    <div class="metric-label">People Benefited</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">💰</div>
+                    <span class="metric-value" id="metricCost">€0</span>
+                    <div class="metric-label">Investment</div>
+                </div>
+            </div>
+
+            <a href="final_ranked_map.html" class="cta-button animate-pulse">
+                🗺️ See Exact Locations on Map
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const MAX_TREES = 115019;
+        const CO2_PER_TREE = 0.022; // tonnes per year
+        const COST_PER_TREE = 500; // euros
+        const PEOPLE_TOTAL = 50000; // estimated residents benefited
+
+        function updateSimulation(value) {
+            const trees = parseInt(value);
+            const percentage = (trees / MAX_TREES * 100).toFixed(1);
+            
+            // Update slider value
+            document.getElementById('sliderValue').innerHTML = 
+                `${trees.toLocaleString()} trees (${percentage}% of capacity)`;
+            
+            // Calculate impacts
+            const co2 = (trees * CO2_PER_TREE).toFixed(1);
+            const cooling = (trees / MAX_TREES * 2.5).toFixed(1); // Max 2.5°C
+            const people = Math.round(trees / MAX_TREES * PEOPLE_TOTAL);
+            const cost = (trees * COST_PER_TREE / 1000000).toFixed(1); // in millions
+            
+            // Update heat bar (simulate cooling)
+            const initialHot = 79.7;
+            const initialOrange = 9.9;
+            const initialYellow = 10.0;
+            const initialGreen = 0.4;
+
+            const maxHotReduction = 60; // Max percentage points reduction in hot areas
+            const coolReduction = (trees / MAX_TREES * maxHotReduction);
+            
+            const newHotPercent = Math.max(initialHot - coolReduction, 5); // Ensure hot area doesn't drop too low
+            const hotShift = initialHot - newHotPercent; // The amount of hot area converted
+            
+            // Shift converted area to the cool/green category
+            const newGreenPercent = initialGreen + hotShift;
+            
+            const heatBarAfter = document.getElementById('heatBarAfter');
+            heatBarAfter.innerHTML = `
+                <div class="heat-segment" style="background: #ff4444; width: ${newHotPercent.toFixed(1)}%;">
+                    ${newHotPercent > 10 ? `HOT<br>${newHotPercent.toFixed(1)}%` : ''}
+                </div>
+                <div class="heat-segment" style="background: #ff8c00; width: ${initialOrange.toFixed(1)}%;">
+                    ${initialOrange > 5 ? '9.9%' : ''}
+                </div>
+                <div class="heat-segment" style="background: #ffd700; width: ${initialYellow.toFixed(1)}%;">
+                    10%
+                </div>
+                <div class="heat-segment" style="background: #90ee90; width: ${newGreenPercent.toFixed(1)}%;">
+                    COOL<br>${newGreenPercent.toFixed(1)}%
+                </div>
+            `;
+            
+            // Update stats
+            document.getElementById('coolPercent').innerHTML = 
+                `🌡️ ${newHotPercent.toFixed(1)}%`;
+            document.getElementById('treesPlanted').textContent = trees.toLocaleString();
+            document.getElementById('co2Removed').textContent = `${co2} t`;
+            
+            // Update comfort emoji
+            let comfort = '😐';
+            if (percentage > 75) comfort = '😍'; // Very high impact
+            else if (percentage > 50) comfort = '😊'; // Good impact
+            else if (percentage > 25) comfort = '🙂'; // Medium impact
+            else if (percentage > 0) comfort = '😌'; // Starting impact
+            document.getElementById('comfort').textContent = comfort;
+            
+            // Update metrics
+            document.getElementById('metricCO2').textContent = co2;
+            document.getElementById('metricTemp').textContent = `-${cooling}°C`;
+            document.getElementById('metricPeople').textContent = people.toLocaleString();
+            document.getElementById('metricCost').textContent = `€${cost}M`;
+        }
+
+        // Auto-animate on load
+        window.onload = function() {
+            // Check if the simulator is fully loaded before animating
+            if (document.getElementById('treeSlider')) {
+                setTimeout(() => {
+                    const slider = document.getElementById('treeSlider');
+                    let value = 0;
+                    const step = Math.ceil(MAX_TREES / 200); // 200 steps for smoother animation
+                    const interval = setInterval(() => {
+                        value += step;
+                        if (value >= MAX_TREES) {
+                            value = MAX_TREES;
+                            clearInterval(interval);
+                        }
+                        slider.value = value;
+                        updateSimulation(value);
+                    }, 10); // Faster interval for quick demo
+                }, 500); // Wait half a second before starting
+            }
+        };
+        // Initial setup
+        updateSimulation(0);
+    </script>
+</body>
+</html>

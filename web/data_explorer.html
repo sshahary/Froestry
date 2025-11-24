@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Data & Exclusions - Heilbronn Tree Planting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section h2 {
+            color: #2e7d32;
+            margin-bottom: 25px;
+            font-size: 32px;
+            border-bottom: 3px solid #2e7d32;
+            padding-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%);
+        }
+
+        .stat-card.red {
+            background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%);
+        }
+
+        .stat-card.orange {
+            background: linear-gradient(135deg, #ff9800 0%, #ffc107 100%);
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .dataset-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .dataset-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #2e7d32;
+        }
+
+        .dataset-item h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .dataset-item .source {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .dataset-item .features {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .exclusion-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .exclusion-item {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #ffc107;
+        }
+
+        .exclusion-item.critical {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .exclusion-item .count {
+            font-size: 32px;
+            font-weight: bold;
+            color: #dc3545;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .exclusion-item .label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .why-box {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #007bff;
+            margin-top: 20px;
+        }
+
+        .why-box h3 {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+
+        .why-box ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .pipeline-diagram {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .pipeline-step .number {
+            background: #2e7d32;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .pipeline-step .content {
+            flex: 1;
+        }
+
+        .pipeline-step .title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+
+        .pipeline-step .description {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .coverage-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .coverage-table th {
+            background: #2e7d32;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .coverage-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .coverage-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .coverage-table .check {
+            color: #28a745;
+            font-size: 20px;
+        }
+
+        .coverage-table .cross {
+            color: #dc3545;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="dashboard.html" class="back-button">← Back to Dashboard</a>
+
+        <div class="header">
+            <h1>📊 Data & Exclusions</h1>
+            <p>Comprehensive analysis of 8 datasets covering 100 km² of Heilbronn</p>
+        </div>
+
+        <!-- OVERVIEW STATS -->
+        <div class="section">
+            <h2>📈 Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-card green">
+                    <span class="stat-value">8</span>
+                    <div class="stat-label">Datasets Analyzed</div>
+                </div>
+                <div class="stat-card red">
+                    <span class="stat-value">32,557</span>
+                    <div class="stat-label">Features Excluded</div>
+                </div>
+                <div class="stat-card orange">
+                    <span class="stat-value">11.50 km²</span>
+                    <div class="stat-label">Plantable Area</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">114,982</span>
+                    <div class="stat-label">Locations Analyzed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATASETS USED -->
+        <div class="section">
+            <h2>🗄️ Datasets Used</h2>
+            <div class="dataset-list">
+                <div class="dataset-item">
+                    <h3>1. ALKIS Buildings</h3>
+                    <div class="source">Source: gebaeudeBauwerke.shp</div>
+                    <div class="features">27,018 structures</div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                        All buildings including homes (11,746), parking garages (8,527), commercial buildings, and more.
+                    </p>
+                </div>
+
+                <div class="dataset-item">
+                    <h3>2. ALKIS Roads</h3>
+                    <div class="source">Source: nutzung.shp (Strassenverkehr)</div>
+                    <div class="features">688 road segments</div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                        All traffic areas including roads and 688 surface parking areas.
+                    </p>
+                </div>
+
+                <div class="dataset-item">
+                    <h3>3. ALKIS Land Use</h3>
+                    <div class="source">Source: nutzung.shp</div>
+                    <div class="features">7,090 polygons</div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                        18 different land use categories including residential, agricultural, and recreational areas.
+                    </p>
+                </div>
+
+                <div class="dataset-item">
+                    <h3>4. Baumkataster (Trees)</h3>
+                    <div class="source">Source: Tree cadastre</div>
+                    <div class="features">11,500+ existing trees</div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                        Complete inventory of existing trees with species, crown diameter, and health status.
+                    </p>
+                </div>
+
+                <div class="dataset-item">
+                    <h3>5. Green Spaces</h3>
+                    <div class="source">Source: Grünflächenkataster</div>
+                    <div class="features">2,447 green areas</div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                        Public parks, recreation areas, and managed green spaces where planting is feasible.
+                    </p>
+                </div>
+
+                <div class="dataset-item">
+                    <h3>6. Water Bodies</h3>
+                    <div class="source">Source: nutzung.shp (Gewaesser)</div>
+                    <div class="features">146 water features</div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                        Rivers (125), lakes (19), and harbor areas (2).
+                    </p>
+                </div>
+
+                <div class="dataset-item">
+                    <h3>7. DOP Aerial Imagery</h3>
+                    <div class="source">Source: DOP20RGBI (2024)</div>
+                    <div class="features">6 tiles, 20cm resolution</div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                        High-resolution satellite imagery for NDVI heat mapping and vegetation analysis.
+                    </p>
+                </div>
+
+                <div class="dataset-item">
+                    <h3>8. Fire Access Routes</h3>
+                    <div class="source">Source: Straßenkataster</div>
+                    <div class="features">Critical access paths</div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                        Fire department access routes with mandatory 5m clearance zones.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXCLUSIONS BREAKDOWN -->
+        <div class="section">
+            <h2>🚫 What We Excluded (32,557 Features)</h2>
+            <div class="exclusion-breakdown">
+                <div class="exclusion-item critical">
+                    <span class="count">27,018</span>
+                    <div class="label">Buildings<br>(3m buffer)</div>
+                </div>
+
+                <div class="exclusion-item critical">
+                    <span class="count">8,527</span>
+                    <div class="label">Parking Structures<br>(Included above)</div>
+                </div>
+
+                <div class="exclusion-item critical">
+                    <span class="count">11,500+</span>
+                    <div class="label">Existing Trees<br>(Dynamic buffer)</div>
+                </div>
+
+                <div class="exclusion-item">
+                    <span class="count">688</span>
+                    <div class="label">Roads & Parking<br>(2.5m buffer)</div>
+                </div>
+
+                <div class="exclusion-item">
+                    <span class="count">146</span>
+                    <div class="label">Water Bodies<br>(Complete exclusion)</div>
+                </div>
+
+                <div class="exclusion-item">
+                    <span class="count">~500</span>
+                    <div class="label">Fire Access Routes<br>(5m buffer)</div>
+                </div>
+            </div>
+
+            <div class="why-box">
+                <h3>🤔 Why These Exclusions?</h3>
+                <ul>
+                    <li><strong>Buildings (3m):</strong> Prevents foundation damage, ensures sunlight access, avoids roof/gutter interference</li>
+                    <li><strong>Parking (9,215 areas):</strong> Ensures accessibility, prevents vehicle damage, maintains traffic flow</li>
+                    <li><strong>Roads (2.5m):</strong> Maintains sight lines, prevents root damage to pavement, ensures pedestrian safety</li>
+                    <li><strong>Existing Trees (dynamic):</strong> Prevents competition for water/nutrients, maintains canopy health, varies by crown size</li>
+                    <li><strong>Fire Access (5m):</strong> Legal requirement for emergency vehicle access, fire safety code compliance</li>
+                    <li><strong>Water Bodies:</strong> Ecological protection, flood management, impossible terrain</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- PROCESSING PIPELINE -->
+        <div class="section">
+            <h2>⚙️ Processing Pipeline</h2>
+            <div class="pipeline-diagram">
+                <div class="pipeline-step">
+                    <div class="number">1</div>
+                    <div class="content">
+                        <div class="title">Data Ingestion</div>
+                        <div class="description">Load 8 datasets, harmonize coordinate systems (EPSG:25832), validate geometries</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="number">2</div>
+                    <div class="content">
+                        <div class="title">Exclusion Zone Creation</div>
+                        <div class="description">Apply buffers (3m buildings, 2.5m roads, 5m fire), merge 32,557 exclusion features</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="number">3</div>
+                    <div class="content">
+                        <div class="title">Plantable Area Identification</div>
+                        <div class="description">Subtract exclusions from green spaces → 11.50 km² plantable area</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="number">4</div>
+                    <div class="content">
+                        <div class="title">Heat Map Generation</div>
+                        <div class="description">Process DOP imagery → Calculate NDVI → Convert to heat scores (0-100)</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="number">5</div>
+                    <div class="content">
+                        <div class="title">Candidate Generation</div>
+                        <div class="description">Create 10m grid → Filter to plantable areas → 114,982 candidates</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="number">6</div>
+                    <div class="content">
+                        <div class="title">AI Scoring</div>
+                        <div class="description">Score each location: Heat (40%) + Spatial (30%) + Social (20%) + Maintenance (10%)</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="number">7</div>
+                    <div class="content">
+                        <div class="title">Ranking & Export</div>
+                        <div class="description">Sort by final score → Generate top 100 → Export with coordinates, species recommendations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COVERAGE ANALYSIS -->
+        <div class="section">
+            <h2>✅ Coverage Analysis</h2>
+            <p style="margin-bottom: 20px; color: #666;">What features are included in our safety exclusions:</p>
+            <table class="coverage-table">
+                <thead>
+                    <tr>
+                        <th>Feature Type</th>
+                        <th style="text-align: center;">Covered?</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Residential Buildings</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>11,746 homes with 3m buffer</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Surface Parking</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>688 parking areas in Strassenverkehr</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Parking Garages</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>8,527 structures (regular + underground)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multi-story Parking</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>35 Parkhaus buildings</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gas Stations</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>10 Tankstelle locations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Commercial Buildings</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>6,745 structures</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Major Roads</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>All Strassenverkehr with 2.5m buffer</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fire Access Routes</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>Critical routes with 5m clearance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Existing Tree Canopies</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>11,500+ trees with dynamic buffers</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Water Bodies</strong></td>
+                        <td style="text-align: center;"><span class="check">✓</span></td>
+                        <td>146 rivers, lakes, harbors</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Underground Pipes</strong></td>
+                        <td style="text-align: center;"><span class="cross">⚠</span></td>
+                        <td>Not in public data - requires utility cadastre (Phase 2)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Underground Cables</strong></td>
+                        <td style="text-align: center;"><span class="cross">⚠</span></td>
+                        <td>Not in public data - requires utility cadastre (Phase 2)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="why-box" style="margin-top: 20px; background: #fff3cd; border-color: #ffc107;">
+                <h3 style="color: #856404;">⚠️ Why Some Items Aren't Included</h3>
+                <p style="color: #856404; line-height: 1.6;">
+                    Underground utility data (Leitungskataster) is proprietary and not available in public datasets for security reasons. 
+                    In production deployment, city planners would cross-reference our top 100 locations with utility maps during the approval phase. 
+                    <strong>Our system reduces verification workload by 99%</strong> - from 114,982 locations to just 100, making manual utility checking feasible.
+                </p>
+            </div>
+        </div>
+
+        <!-- BACK BUTTON -->
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="dashboard.html" class="back-button" style="font-size: 18px; padding: 15px 40px;">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+</body>
+</html>

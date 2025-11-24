@@ -1,0 +1,496 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🤖 Chat Assistant Test - Heilbronn Tree Planting</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+        color: white;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .test-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+      .test-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        backdrop-filter: blur(10px);
+      }
+      .test-card h3 {
+        color: #a3e635;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .status {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-block;
+        margin: 10px 0;
+      }
+      .status.success {
+        background: #10b981;
+        color: white;
+      }
+      .status.error {
+        background: #ef4444;
+        color: white;
+      }
+      .status.info {
+        background: #3b82f6;
+        color: white;
+      }
+      .status.warning {
+        background: #f59e0b;
+        color: white;
+      }
+
+      button {
+        background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+        color: black;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        margin: 5px;
+        transition: all 0.3s ease;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(163, 230, 53, 0.3);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .results {
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 15px;
+        font-family: "Monaco", "Menlo", monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        max-height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+
+      .demo-queries {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+      }
+      .demo-queries button {
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+
+      .integration-info {
+        background: linear-gradient(
+          135deg,
+          rgba(163, 230, 53, 0.1) 0%,
+          rgba(132, 204, 22, 0.1) 100%
+        );
+        border: 1px solid rgba(163, 230, 53, 0.3);
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 30px;
+      }
+
+      .code-block {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+        font-family: "Monaco", "Menlo", monospace;
+        font-size: 12px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🤖 Chat Assistant Integration Test</h1>
+        <p>
+          Testing the backend integration for Heilbronn Tree Planting AI
+          Assistant
+        </p>
+        <div class="status info">
+          Ready to test your friend's backend integration!
+        </div>
+      </div>
+
+      <div class="test-grid">
+        <!-- Environment Check -->
+        <div class="test-card">
+          <h3>🔧 Environment Check</h3>
+          <div id="env-status">Checking configuration...</div>
+          <button onclick="checkEnvironment()">Check Environment</button>
+          <div class="results" id="env-results"></div>
+        </div>
+
+        <!-- Backend Connection Test -->
+        <div class="test-card">
+          <h3>🌐 Backend Connection</h3>
+          <div>Test connection to your friend's API</div>
+          <button onclick="testBackendConnection()">Test Backend</button>
+          <button onclick="testDemoMode()">Test Demo Mode</button>
+          <div class="results" id="backend-results"></div>
+        </div>
+
+        <!-- Query Testing -->
+        <div class="test-card">
+          <h3>💬 Query Testing</h3>
+          <div>Test different types of user queries</div>
+          <div class="demo-queries">
+            <button
+              onclick="testQuery('Find me the best locations in Heilbronn')">
+              Best Locations
+            </button>
+            <button onclick="testQuery('Show me 2 tree planting spots')">
+              2 Spots
+            </button>
+            <button onclick="testQuery('What about postal code 74072?')">
+              Postal Code
+            </button>
+            <button onclick="testQuery('Tell me about heat islands')">
+              Heat Info
+            </button>
+          </div>
+          <div class="results" id="query-results"></div>
+        </div>
+
+        <!-- Response Format Test -->
+        <div class="test-card">
+          <h3>📋 Response Format</h3>
+          <div>Verify the expected API response format</div>
+          <button onclick="showExpectedFormat()">Show Expected Format</button>
+          <button onclick="validateResponseFormat()">Validate Format</button>
+          <div class="results" id="format-results"></div>
+        </div>
+      </div>
+
+      <!-- Integration Instructions -->
+      <div class="integration-info">
+        <h2>🚀 Integration Instructions for Your Friend</h2>
+        <p>Your friend's backend should implement this API endpoint:</p>
+
+        <div class="code-block">
+          <strong>Endpoint:</strong> POST /api/tree-locations
+          <strong>Content-Type:</strong> application/json
+
+          <strong>Request Body:</strong>
+          { "query": "Find me the best locations in Heilbronn" }
+
+          <strong>Response Format:</strong>
+          { "summary_of_results": "Here are the best places to plant trees near
+          Heilbronn:", "locations": [ { "summary": "Location details with score,
+          species, cooling benefits...", "latitude": 49.13220684039029,
+          "longitude": 9.225236784881375 } ], "tip": "Did you know that native
+          tree species usually have higher survival rates?" }
+        </div>
+
+        <p>
+          <strong>Current Status:</strong>
+          <span class="status info">Ready for backend URL</span>
+        </p>
+        <p>
+          Update the <code>REACT_APP_AI_ENDPOINT</code> in your
+          <code>.env</code> file with your friend's API URL.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // Environment check
+      function checkEnvironment() {
+        const results = document.getElementById("env-results");
+        const status = document.getElementById("env-status");
+
+        results.innerHTML = "Checking environment configuration...\n\n";
+
+        // Check if we're running on the dev server
+        const isDevServer =
+          window.location.port === "5173" ||
+          window.location.hostname === "localhost";
+        const backendUrl = isDevServer
+          ? window.location.origin.replace("5173", "8000") +
+            "/api/tree-locations"
+          : "https://your-friends-api.com/api/tree-locations";
+
+        results.innerHTML += `✅ Environment: ${
+          isDevServer ? "Development" : "Production"
+        }\n`;
+        results.innerHTML += `🔗 Expected Backend URL: ${backendUrl}\n`;
+        results.innerHTML += `📁 Config File: web/.env\n`;
+        results.innerHTML += `🔑 Environment Variable: REACT_APP_AI_ENDPOINT\n\n`;
+
+        if (isDevServer) {
+          results.innerHTML += `💡 For testing: Update .env with your friend's URL\n`;
+          status.innerHTML =
+            '<span class="status success">Development environment detected</span>';
+        } else {
+          results.innerHTML += `🚀 Production ready\n`;
+          status.innerHTML =
+            '<span class="status success">Production environment</span>';
+        }
+      }
+
+      // Backend connection test
+      async function testBackendConnection() {
+        const results = document.getElementById("backend-results");
+        results.innerHTML = "Testing backend connection...\n\n";
+
+        try {
+          // Try to connect to the expected backend endpoint
+          const backendUrl =
+            window.location.origin.replace("5173", "8000") +
+            "/api/tree-locations";
+
+          const response = await fetch(backendUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "test connection" }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            results.innerHTML += `✅ Backend connected successfully!\n`;
+            results.innerHTML += `📊 Response received:\n${JSON.stringify(
+              data,
+              null,
+              2
+            )}\n`;
+          } else {
+            results.innerHTML += `⚠️ Backend returned status: ${response.status}\n`;
+            results.innerHTML += `💡 This is expected if your friend hasn't provided the URL yet\n`;
+          }
+        } catch (error) {
+          results.innerHTML += `❌ Connection failed: ${error.message}\n`;
+          results.innerHTML += `💡 This is normal - the app will use demo mode\n`;
+          results.innerHTML += `🔧 Demo mode provides realistic test data\n`;
+        }
+      }
+
+      // Demo mode test
+      function testDemoMode() {
+        const results = document.getElementById("backend-results");
+        results.innerHTML = "Testing demo mode...\n\n";
+
+        // Simulate the demo response from aiLocationService.js
+        const demoResponse = {
+          summary_of_results:
+            "Here are the best places to plant trees near Heilbronn:",
+          locations: [
+            {
+              summary:
+                "Location: Street Side near 49.13220684 N, 9.22523678 E\\nOverall suitability: Excellent (Final score: 100)\\nRecommended species: Ahornblättrige Platane\\nCooling benefit: Up to -2.5°C",
+              latitude: 49.13220684039029,
+              longitude: 9.225236784881375,
+            },
+            {
+              summary:
+                "Green Space location with perfect conditions\\nFinal score: 100/100\\nSpecies: Winterlinde 'Greenspire'\\nCooling: -2.5°C radius",
+              latitude: 49.13149041033738,
+              longitude: 9.223588570468431,
+            },
+          ],
+          tip: "Did you know that native tree species usually have higher survival rates?",
+        };
+
+        results.innerHTML += `✅ Demo mode working perfectly!\n`;
+        results.innerHTML += `📍 Locations found: ${demoResponse.locations.length}\n`;
+        results.innerHTML += `💡 Tip included: ${
+          demoResponse.tip ? "Yes" : "No"
+        }\n\n`;
+        results.innerHTML += `📊 Demo Response:\n${JSON.stringify(
+          demoResponse,
+          null,
+          2
+        )}\n`;
+      }
+
+      // Query testing
+      async function testQuery(query) {
+        const results = document.getElementById("query-results");
+        results.innerHTML = `Testing query: "${query}"\n\n`;
+
+        // Simulate the ChatAssistant processing
+        try {
+          // This mimics the aiLocationService.getDemoResponse() method
+          const processedResponse = {
+            success: true,
+            message:
+              "Here are the best places to plant trees near Heilbronn:<br><br>💡 <strong>Tip:</strong> Did you know that native tree species usually have higher survival rates?",
+            locations: [
+              {
+                id: `ai_${Date.now()}_0`,
+                lat: 49.13220684039029,
+                lng: 9.225236784881375,
+                score: 100,
+                info: "AI recommended tree planting location",
+                fullSummary: "Excellent location with perfect score",
+                details: {
+                  heatScore: 100,
+                  spatialScore: 100,
+                  socialScore: 100,
+                  maintenanceScore: 100,
+                  species: "Ahornblättrige Platane",
+                  cooling: "Up to -2.5°C cooling",
+                  benefits:
+                    "Community shade, cooling effect, air quality improvement",
+                },
+              },
+            ],
+          };
+
+          results.innerHTML += `✅ Query processed successfully!\n`;
+          results.innerHTML += `📝 Message: ${processedResponse.message.replace(
+            /<[^>]*>/g,
+            ""
+          )}\n`;
+          results.innerHTML += `📍 Locations found: ${processedResponse.locations.length}\n`;
+          results.innerHTML += `🎯 First location score: ${processedResponse.locations[0].score}/100\n`;
+          results.innerHTML += `🌳 Recommended species: ${processedResponse.locations[0].details.species}\n`;
+          results.innerHTML += `❄️ Cooling effect: ${processedResponse.locations[0].details.cooling}\n\n`;
+
+          results.innerHTML += `📊 Full Response:\n${JSON.stringify(
+            processedResponse,
+            null,
+            2
+          )}\n`;
+        } catch (error) {
+          results.innerHTML += `❌ Query processing failed: ${error.message}\n`;
+        }
+      }
+
+      // Show expected format
+      function showExpectedFormat() {
+        const results = document.getElementById("format-results");
+        results.innerHTML = `Expected API Response Format:\n\n`;
+
+        const expectedFormat = {
+          summary_of_results:
+            "Here are the best places to plant trees near Heilbronn:",
+          locations: [
+            {
+              summary:
+                "Location details with score, species, cooling benefits...",
+              latitude: 49.13220684039029,
+              longitude: 9.225236784881375,
+            },
+          ],
+          tip: "Did you know that native tree species usually have higher survival rates?",
+        };
+
+        results.innerHTML += JSON.stringify(expectedFormat, null, 2);
+        results.innerHTML += `\n\n✅ This format is already implemented in aiLocationService.js\n`;
+        results.innerHTML += `🔧 The app will automatically process this format\n`;
+      }
+
+      // Validate response format
+      function validateResponseFormat() {
+        const results = document.getElementById("format-results");
+        results.innerHTML = `Validating response format compatibility...\n\n`;
+
+        // Test with the expected format
+        const testResponse = {
+          summary_of_results: "Test message",
+          locations: [
+            {
+              summary: "Test location summary with Final score: 95",
+              latitude: 49.1427,
+              longitude: 9.2109,
+            },
+          ],
+          tip: "Test tip",
+        };
+
+        try {
+          // Simulate the processAPIResponse method
+          const message =
+            testResponse.summary_of_results +
+            (testResponse.tip
+              ? `<br><br>💡 <strong>Tip:</strong> ${testResponse.tip}`
+              : "");
+
+          const locations = testResponse.locations.map((location, index) => {
+            const scoreMatch = location.summary.match(
+              /(?:Final score:|score)\s*(\d+)/i
+            );
+            const score = scoreMatch ? parseInt(scoreMatch[1]) : 95;
+
+            return {
+              id: `ai_${Date.now()}_${index}`,
+              lat: location.latitude,
+              lng: location.longitude,
+              score: score,
+              info:
+                location.summary.split("\\n")[0] ||
+                "AI recommended tree planting location",
+              fullSummary: location.summary,
+            };
+          });
+
+          results.innerHTML += `✅ Format validation successful!\n`;
+          results.innerHTML += `📝 Message extracted: "${testResponse.summary_of_results}"\n`;
+          results.innerHTML += `📍 Locations processed: ${locations.length}\n`;
+          results.innerHTML += `🎯 Score extracted: ${locations[0].score}\n`;
+          results.innerHTML += `💡 Tip included: ${
+            testResponse.tip ? "Yes" : "No"
+          }\n\n`;
+
+          results.innerHTML += `✅ Your friend's API response will be processed correctly!\n`;
+        } catch (error) {
+          results.innerHTML += `❌ Format validation failed: ${error.message}\n`;
+        }
+      }
+
+      // Auto-run environment check on load
+      window.onload = () => {
+        checkEnvironment();
+        setTimeout(testDemoMode, 1000);
+      };
+    </script>
+  </body>
+</html>

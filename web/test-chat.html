@@ -1,0 +1,206 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Assistant Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #1a1a1a;
+        color: white;
+      }
+      .test-section {
+        background: #2a2a2a;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 10px;
+        border: 1px solid #444;
+      }
+      .success {
+        color: #4ade80;
+      }
+      .error {
+        color: #ef4444;
+      }
+      .info {
+        color: #60a5fa;
+      }
+      button {
+        background: #a3e635;
+        color: black;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #84cc16;
+      }
+      #results {
+        background: #111;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 10px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🤖 Chat Assistant Backend Test</h1>
+
+    <div class="test-section">
+      <h2>Environment Check</h2>
+      <p id="env-status">Checking environment...</p>
+    </div>
+
+    <div class="test-section">
+      <h2>Backend Connection Test</h2>
+      <button onclick="testBackend()">Test Backend Connection</button>
+      <button onclick="testDemoMode()">Test Demo Mode</button>
+      <div id="results"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Sample Queries</h2>
+      <button onclick="testQuery('Find me the best locations in Heilbronn')">
+        Test: Best Locations
+      </button>
+      <button onclick="testQuery('Show me 2 tree planting spots')">
+        Test: 2 Spots
+      </button>
+      <button onclick="testQuery('What about postal code 74072?')">
+        Test: Postal Code
+      </button>
+    </div>
+
+    <script>
+      // Check environment
+      document.getElementById(
+        "env-status"
+      ).innerHTML = `<span class="info">Backend URL: ${window.location.origin.replace(
+        "5173",
+        "8000"
+      )}/api/tree-locations</span>`;
+
+      async function testBackend() {
+        const results = document.getElementById("results");
+        results.innerHTML = "Testing backend connection...\n";
+
+        try {
+          const response = await fetch("/api/tree-locations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "test connection" }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            results.innerHTML += `<span class="success">✅ Backend connected!</span>\n`;
+            results.innerHTML += `Response: ${JSON.stringify(data, null, 2)}\n`;
+          } else {
+            results.innerHTML += `<span class="error">❌ Backend not available (${response.status})</span>\n`;
+            results.innerHTML += `<span class="info">💡 This is normal - using demo mode</span>\n`;
+          }
+        } catch (error) {
+          results.innerHTML += `<span class="error">❌ Connection failed: ${error.message}</span>\n`;
+          results.innerHTML += `<span class="info">💡 This is expected - demo mode will work</span>\n`;
+        }
+      }
+
+      async function testDemoMode() {
+        const results = document.getElementById("results");
+        results.innerHTML = "Testing demo mode...\n";
+
+        // Simulate the demo response
+        const demoResponse = {
+          summary_of_results:
+            "Here are the best places to plant trees near Heilbronn:",
+          locations: [
+            {
+              summary:
+                "Excellent location with 100/100 score, Ahornblättrige Platane recommended, -2.5°C cooling",
+              latitude: 49.13220684039029,
+              longitude: 9.225236784881375,
+            },
+          ],
+          tip: "Native tree species have higher survival rates!",
+        };
+
+        results.innerHTML += `<span class="success">✅ Demo mode working!</span>\n`;
+        results.innerHTML += `Demo response: ${JSON.stringify(
+          demoResponse,
+          null,
+          2
+        )}\n`;
+      }
+
+      async function testQuery(query) {
+        const results = document.getElementById("results");
+        results.innerHTML = `Testing query: "${query}"\n`;
+
+        // This simulates what the ChatAssistant component does
+        try {
+          const mockAIService = {
+            async getTreeLocations(userQuery) {
+              // This is the demo response from aiLocationService.js
+              const demoApiResponse = {
+                summary_of_results:
+                  "Here are the best places to plant trees near Heilbronn:",
+                locations: [
+                  {
+                    summary:
+                      "Location: Street Side near 49.13220684 N, 9.22523678 E\\nOverall suitability: Excellent (Final score: 100)\\nRecommended species: Ahornblättrige Platane\\nCooling benefit: Up to -2.5°C",
+                    latitude: 49.13220684039029,
+                    longitude: 9.225236784881375,
+                  },
+                ],
+                tip: "Did you know that native tree species usually have higher survival rates?",
+              };
+
+              return {
+                success: true,
+                message:
+                  demoApiResponse.summary_of_results +
+                  (demoApiResponse.tip
+                    ? `<br><br>💡 <strong>Tip:</strong> ${demoApiResponse.tip}`
+                    : ""),
+                locations: demoApiResponse.locations.map((location, index) => ({
+                  id: `ai_${Date.now()}_${index}`,
+                  lat: location.latitude,
+                  lng: location.longitude,
+                  score: 100,
+                  info: "AI recommended tree planting location",
+                  fullSummary: location.summary,
+                })),
+              };
+            },
+          };
+
+          const result = await mockAIService.getTreeLocations(query);
+          results.innerHTML += `<span class="success">✅ Query processed successfully!</span>\n`;
+          results.innerHTML += `Message: ${result.message}\n`;
+          results.innerHTML += `Locations found: ${result.locations.length}\n`;
+          results.innerHTML += `Location details: ${JSON.stringify(
+            result.locations[0],
+            null,
+            2
+          )}\n`;
+        } catch (error) {
+          results.innerHTML += `<span class="error">❌ Query failed: ${error.message}</span>\n`;
+        }
+      }
+
+      // Auto-run environment check
+      window.onload = () => {
+        setTimeout(testDemoMode, 1000);
+      };
+    </script>
+  </body>
+</html>

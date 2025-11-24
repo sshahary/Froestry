@@ -1,0 +1,713 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heilbronn Tree Planting - Compact Map</title>
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #1a1a1a;
+        color: white;
+      }
+
+      #map {
+        height: 100vh;
+        width: 100vw;
+      }
+
+      .compact-controls {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .control-panel {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 10px;
+        color: white;
+        font-size: 0.8em;
+      }
+
+      .stats-display {
+        min-width: 160px;
+      }
+
+      .stats-title {
+        font-weight: bold;
+        color: #ccff00;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.9em;
+      }
+
+      .quick-toggles {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3px;
+        margin-top: 6px;
+      }
+
+      .toggle-btn {
+        padding: 4px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.7em;
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
+      .toggle-btn.active {
+        background: #ccff00;
+        color: #000;
+      }
+
+      .toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .toggle-btn.active:hover {
+        background: #b8e600;
+      }
+
+      .advanced-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .control-btn {
+        padding: 6px 8px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.7em;
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
+      .control-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .compact-legend {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 12px;
+        max-width: 220px;
+        color: #333;
+        font-size: 0.75em;
+        display: none;
+      }
+
+      .compact-legend.show {
+        display: block;
+      }
+
+      .legend-section {
+        margin-bottom: 10px;
+      }
+
+      .legend-section h4 {
+        margin: 0 0 4px 0;
+        font-size: 0.85em;
+        font-weight: bold;
+      }
+
+      .legend-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.7em;
+      }
+
+      .legend-color {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+      }
+
+      .status-bar {
+        position: absolute;
+        bottom: 15px;
+        left: 15px;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 6px;
+        padding: 6px 10px;
+        color: white;
+        font-size: 0.75em;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2000;
+        text-align: center;
+        color: white;
+      }
+
+      .spinner {
+        width: 30px;
+        height: 30px;
+        border: 2px solid #333;
+        border-top: 2px solid #ccff00;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <!-- Loading indicator -->
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading Tree Data...</p>
+    </div>
+
+    <!-- Compact Controls -->
+    <div class="compact-controls">
+      <!-- Stats Display -->
+      <div class="control-panel stats-display">
+        <div class="stats-title">
+          <span>🌳</span>
+          <span>Heilbronn Trees</span>
+        </div>
+        <div id="stats-content">
+          <div>📍 <span id="total-locations">114,982</span> locations</div>
+          <div>✅ <span id="fresh-locations">13,882</span> verified</div>
+          <div>🗺️ <span id="layer-count">20</span> layers</div>
+        </div>
+      </div>
+
+      <!-- Quick Toggles -->
+      <div class="control-panel">
+        <div style="font-weight: bold; margin-bottom: 4px; font-size: 0.75em">
+          Quick Toggles
+        </div>
+        <div class="quick-toggles">
+          <button
+            class="toggle-btn active"
+            data-layer="heatMap"
+            title="Heat Map">
+            🔥
+          </button>
+          <button
+            class="toggle-btn active"
+            data-layer="buildings"
+            title="Buildings">
+            🏢
+          </button>
+          <button class="toggle-btn active" data-layer="roads" title="Roads">
+            🛣️
+          </button>
+          <button class="toggle-btn active" data-layer="trees" title="Trees">
+            🌳
+          </button>
+          <button class="toggle-btn active" data-layer="water" title="Water">
+            🌊
+          </button>
+          <button
+            class="toggle-btn active"
+            data-layer="plantable"
+            title="Plantable">
+            ✅
+          </button>
+          <button
+            class="toggle-btn active"
+            data-layer="topLocations"
+            title="Top Spots">
+            🎯
+          </button>
+          <button
+            class="toggle-btn active"
+            data-layer="greenSpaces"
+            title="Green Areas">
+            🌿
+          </button>
+        </div>
+      </div>
+
+      <!-- Advanced Controls -->
+      <div class="control-panel">
+        <div style="font-weight: bold; margin-bottom: 4px; font-size: 0.75em">
+          Advanced
+        </div>
+        <div class="advanced-controls">
+          <button class="control-btn" onclick="toggleLegend()">
+            🔼 Show Details
+          </button>
+          <button class="control-btn" onclick="toggleExclusions()">
+            🚫 Toggle Exclusions
+          </button>
+          <button class="control-btn" onclick="toggleLocations()">
+            📍 Toggle Locations
+          </button>
+          <button class="control-btn" onclick="centerMap()">
+            🎯 Center Map
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compact Legend -->
+    <div id="compact-legend" class="compact-legend">
+      <div class="legend-section">
+        <h4>🔥 Heat Priority</h4>
+        <div class="legend-grid">
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #dc2626"></div>
+            <span>Extreme</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #ea580c"></div>
+            <span>High</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #eab308"></div>
+            <span>Medium</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #16a34a"></div>
+            <span>Low</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="legend-section">
+        <h4>🚫 Exclusions</h4>
+        <div class="legend-grid">
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #cc0000"></div>
+            <span>Buildings</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #666666"></div>
+            <span>Roads</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #8b4513"></div>
+            <span>Trees</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #0066cc"></div>
+            <span>Water</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="legend-section">
+        <h4>✅ Plantable Areas</h4>
+        <div class="legend-grid">
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #00ff00"></div>
+            <span>Available</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #228b22"></div>
+            <span>Green Spaces</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style="border-top: 1px solid #ddd; padding-top: 8px; margin-top: 8px">
+        <div style="font-size: 0.7em">
+          <div style="font-weight: bold; color: #16a34a">
+            11.50 km² plantable
+          </div>
+          <div style="color: #666">13,882 verified locations</div>
+          <div style="color: #ea580c">305 tonnes CO₂/year</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-indicator">
+        <span style="color: #ccff00">●</span>
+        <span>Live Data</span>
+      </div>
+      <div>114,982 locations</div>
+      <div>305t CO₂/year</div>
+      <div>20 layers</div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+      // Initialize map
+      const map = L.map("map", {
+        center: [49.1427, 9.2109],
+        zoom: 13,
+        maxBounds: [
+          [49.12, 9.18],
+          [49.17, 9.25],
+        ],
+        maxBoundsViscosity: 1.0,
+      });
+
+      // Add base layer
+      L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
+        attribution: "&copy; Google",
+        maxZoom: 20,
+      }).addTo(map);
+
+      // Add labels overlay
+      L.tileLayer("https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}", {
+        attribution: "&copy; Google",
+        maxZoom: 20,
+      }).addTo(map);
+
+      // Layer groups
+      const layerGroups = {
+        heatMap: L.layerGroup(),
+        exclusions: L.layerGroup(),
+        plantable: L.layerGroup(),
+        locations: L.layerGroup(),
+      };
+
+      // Add all layer groups to map
+      Object.values(layerGroups).forEach((group) => group.addTo(map));
+
+      // Heat map overlay
+      const heatMapBounds = [
+        [49.12, 9.18],
+        [49.17, 9.25],
+      ];
+      const heatMapOverlay = L.imageOverlay(
+        "/data/heat_map_comparison.png",
+        heatMapBounds,
+        {
+          opacity: 0.6,
+        }
+      );
+      layerGroups.heatMap.addLayer(heatMapOverlay);
+
+      // Layer visibility state
+      const layerVisibility = {
+        heatMap: true,
+        buildings: true,
+        roads: true,
+        trees: true,
+        water: true,
+        plantable: true,
+        topLocations: true,
+        greenSpaces: true,
+      };
+
+      // Toggle functions
+      const toggleLayer = (layerName) => {
+        layerVisibility[layerName] = !layerVisibility[layerName];
+        const btn = document.querySelector(`[data-layer="${layerName}"]`);
+        if (btn) {
+          btn.classList.toggle("active", layerVisibility[layerName]);
+        }
+
+        // Handle layer visibility logic here
+        console.log(`Toggled ${layerName}: ${layerVisibility[layerName]}`);
+      };
+
+      const toggleLegend = () => {
+        const legend = document.getElementById("compact-legend");
+        const btn = event.target;
+        if (legend.classList.contains("show")) {
+          legend.classList.remove("show");
+          btn.textContent = "🔼 Show Details";
+        } else {
+          legend.classList.add("show");
+          btn.textContent = "🔽 Hide Details";
+        }
+      };
+
+      const toggleExclusions = () => {
+        const exclusionLayers = ["buildings", "roads", "trees", "water"];
+        const allVisible = exclusionLayers.every(
+          (layer) => layerVisibility[layer]
+        );
+        exclusionLayers.forEach((layer) => {
+          layerVisibility[layer] = !allVisible;
+          const btn = document.querySelector(`[data-layer="${layer}"]`);
+          if (btn) btn.classList.toggle("active", layerVisibility[layer]);
+        });
+      };
+
+      const toggleLocations = () => {
+        layerVisibility.topLocations = !layerVisibility.topLocations;
+        const btn = document.querySelector(`[data-layer="topLocations"]`);
+        if (btn) btn.classList.toggle("active", layerVisibility.topLocations);
+      };
+
+      const centerMap = () => {
+        map.setView([49.1427, 9.2109], 13);
+      };
+
+      // Add event listeners to toggle buttons
+      document.querySelectorAll(".toggle-btn[data-layer]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const layer = btn.getAttribute("data-layer");
+          toggleLayer(layer);
+        });
+      });
+
+      // Style functions
+      const getLayerStyle = (layerType) => {
+        const styles = {
+          buildings: {
+            color: "#cc0000",
+            fillColor: "#cc0000",
+            fillOpacity: 0.3,
+            weight: 1,
+          },
+          roads: {
+            color: "#666666",
+            fillColor: "#666666",
+            fillOpacity: 0.3,
+            weight: 2,
+          },
+          trees: {
+            color: "#8B4513",
+            fillColor: "#8B4513",
+            fillOpacity: 0.4,
+            weight: 1,
+          },
+          water: {
+            color: "#0066cc",
+            fillColor: "#0066cc",
+            fillOpacity: 0.5,
+            weight: 1,
+          },
+          plantable: {
+            color: "#00ff00",
+            fillColor: "#00ff00",
+            fillOpacity: 0.4,
+            weight: 2,
+          },
+          greenSpaces: {
+            color: "#228B22",
+            fillColor: "#228B22",
+            fillOpacity: 0.4,
+            weight: 1,
+          },
+        };
+        return styles[layerType] || styles.plantable;
+      };
+
+      // Create location marker
+      const createLocationMarker = (score) => {
+        const color =
+          score === 100 ? "#CCFF00" : score >= 95 ? "#FF6B35" : "#FFD23F";
+        return L.divIcon({
+          className: "custom-marker",
+          html: `<div style="
+                    width: 16px; height: 16px;
+                    background-color: ${color};
+                    border: 2px solid white;
+                    border-radius: 50%;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    display: flex; align-items: center; justify-content: center;
+                    font-weight: bold; font-size: 8px;
+                    color: ${color === "#CCFF00" ? "#000" : "#fff"};
+                ">${Math.round(score)}</div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        });
+      };
+
+      // Load GeoJSON data
+      const loadGeoJSONLayer = async (
+        filename,
+        layerGroup,
+        style,
+        isLocationLayer = false
+      ) => {
+        try {
+          const response = await fetch(`/data/${filename}`);
+          if (!response.ok) throw new Error(`Failed to load ${filename}`);
+
+          const data = await response.json();
+
+          if (isLocationLayer) {
+            data.features.forEach((feature, index) => {
+              if (feature.geometry.type === "Point") {
+                const [lng, lat] = feature.geometry.coordinates;
+                const score = feature.properties.final_score || 100;
+
+                const marker = L.marker([lat, lng], {
+                  icon: createLocationMarker(score),
+                });
+
+                marker.bindPopup(`
+                                <div style="color: #333; padding: 8px;">
+                                    <h4 style="margin: 0 0 6px 0;">🌳 Location #${
+                                      index + 1
+                                    }</h4>
+                                    <p style="margin: 2px 0;"><strong>Score:</strong> ${score}/100</p>
+                                    <p style="margin: 2px 0;"><strong>Heat:</strong> ${
+                                      feature.properties.heat_score || 100
+                                    }/100</p>
+                                </div>
+                            `);
+
+                layerGroup.addLayer(marker);
+              }
+            });
+          } else {
+            const geoJsonLayer = L.geoJSON(data, { style: style });
+            layerGroup.addLayer(geoJsonLayer);
+          }
+
+          return data.features?.length || 0;
+        } catch (error) {
+          console.error(`Error loading ${filename}:`, error);
+          return 0;
+        }
+      };
+
+      // Load all layers
+      const loadAllLayers = async () => {
+        console.log("🔄 Loading GeoJSON layers...");
+
+        try {
+          const layerPromises = [
+            loadGeoJSONLayer(
+              "exclusion_buildings.geojson",
+              layerGroups.exclusions,
+              getLayerStyle("buildings")
+            ),
+            loadGeoJSONLayer(
+              "exclusion_roads.geojson",
+              layerGroups.exclusions,
+              getLayerStyle("roads")
+            ),
+            loadGeoJSONLayer(
+              "exclusion_trees.geojson",
+              layerGroups.exclusions,
+              getLayerStyle("trees")
+            ),
+            loadGeoJSONLayer(
+              "water_bodies.geojson",
+              layerGroups.exclusions,
+              getLayerStyle("water")
+            ),
+            loadGeoJSONLayer(
+              "green_spaces.geojson",
+              layerGroups.plantable,
+              getLayerStyle("greenSpaces")
+            ),
+            loadGeoJSONLayer(
+              "plantable_area.geojson",
+              layerGroups.plantable,
+              getLayerStyle("plantable")
+            ),
+            loadGeoJSONLayer(
+              "top_100_locations.geojson",
+              layerGroups.locations,
+              null,
+              true
+            ),
+          ];
+
+          const results = await Promise.all(layerPromises);
+          const totalFeatures = results.reduce((sum, count) => sum + count, 0);
+
+          console.log(`✅ Loaded ${totalFeatures} features`);
+          document.getElementById("loading").style.display = "none";
+        } catch (error) {
+          console.error("❌ Error loading layers:", error);
+          document.getElementById("loading").innerHTML = `
+                    <div style="color: #ff4444;">
+                        <h4>❌ Error Loading Data</h4>
+                        <p>Check data files availability</p>
+                    </div>
+                `;
+        }
+      };
+
+      // Add layer control
+      const overlayMaps = {
+        "🔥 Heat Map": layerGroups.heatMap,
+        "🚫 Exclusions": layerGroups.exclusions,
+        "🌿 Plantable": layerGroups.plantable,
+        "📍 Locations": layerGroups.locations,
+      };
+
+      L.control
+        .layers(null, overlayMaps, {
+          position: "bottomright",
+          collapsed: true,
+        })
+        .addTo(map);
+
+      // Add center marker
+      L.marker([49.1427, 9.2109]).addTo(map).bindPopup(`
+                <div style="color: #333; padding: 8px; text-align: center;">
+                    <h4 style="margin: 0 0 6px 0;">🌳 Heilbronn Center</h4>
+                    <p style="margin: 0; font-size: 0.8em;">Tree Planting Analysis System</p>
+                </div>
+            `);
+
+      // Start loading
+      loadAllLayers();
+
+      console.log("🗺️ Compact Heilbronn Tree Map initialized");
+    </script>
+  </body>
+</html>
